@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use TMC Learn in teaching or research, please cite it as below."
+title: "TMC Learn"
+type: software
+authors:
+  - family-names: Sala
+    given-names: Francesco
+    affiliation: ChemTrain
+abstract: "A Quizlet-style trainer for counting electrons in transition-metal complexes, in one HTML file."
+url: "https://chemtrain.github.io/tmc-learn/tmc_learn.html"
+repository-code: "https://github.com/ChemTrain/tmc-learn"
+license:
+  - MIT
+  - CC-BY-4.0
+date-released: 2026-10-21
+keywords:
+  - electron counting
+  - 18-electron rule
+  - transition-metal complexes
+  - organometallic chemistry
+  - chemistry education
