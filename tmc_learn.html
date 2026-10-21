@@ -1357,7 +1357,9 @@ function ctFields(c) {
   c.lig.forEach(([k, n], g) => {
     const L = LIG[k];
     rows.push({ id: 'l' + g, g, label: `${n > 1 ? n + ' × ' : ''}${esc(ion && easy ? (L.ionName || L.show) : L.show)}`,
-      ask: ion ? 'electrons each, as an ion' : 'electrons each', hint: easy && !ion ? `class ${clsTxt(L.cls)}` : '', want: ion ? L.ion : L.cov, n });
+      // the electrons of the whole group: 3 × CO gives 6
+      ask: `electrons${n > 1 ? ` from all ${n}` : ''}${ion && L.q ? (n > 1 ? ', as ions' : ', as an ion') : ''}`,
+      hint: easy && !ion ? `class ${clsTxt(L.cls)}` : '', want: n * (ion ? L.ion : L.cov), n });
   });
   if (!ion) {
     rows.push({ id: 'metal', label: esc(c.metal), ask: 'electrons from the neutral metal', hint: easy ? 'its group number' : '', want: c.group });
@@ -1447,8 +1449,8 @@ function renderCount() {
   ptMark(c.metal, 'count');
   const struct = hasMol(c) ? `<figure class="struct site-struct">${countSVG(cc, 2.3, 260, 640)}</figure>` : '';
   const ask = settings.method === 'ion'
-    ? `Count it the ${methodBadge('ion', true)} way: each ligand as an ion, then the metal's oxidation state and d electrons, then the total.`
-    : `Count it the ${methodBadge('cov', true)} way: each ligand as a neutral group, the neutral metal, the charge, then the total.`;
+    ? `Count it the ${methodBadge('ion', true)} way: the electrons from each kind of ligand, as ions (all of that kind together), then the metal's oxidation state and d electrons, then the total.`
+    : `Count it the ${methodBadge('cov', true)} way: the electrons from each kind of ligand, as neutral groups (all of that kind together), then the neutral metal, the charge, and the total.`;
   const fb = cc.checked ? `<div class="feedback" aria-live="polite">
       <p class="verdict ${cc.ok ? 'good' : 'bad'}">${cc.ok ? 'All correct' : `${cc.rows.filter(r => cc.marks[r.id]).length} of ${cc.rows.length} right`}</p>
       ${tallyHTML(c)}${c.note && !c.noOs ? `<p class="note">${esc(c.note)}</p>` : ''}
