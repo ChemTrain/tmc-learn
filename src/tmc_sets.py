@@ -1,0 +1,378 @@
+"""Card sets for TMC Learn.
+
+A complex card is written with C():
+
+    C(name, formula, metal, charge, ligands, ve, os, geom, note="", fam=None, mm=0, no_os=False, shape=None)
+
+metal    "Fe", or "Mn2", "Ru3" for complexes with several identical metals.
+charge   overall charge of the complex ion (the counter-ion is not counted).
+ligands  keys of tmc_ligands.LIGANDS separated by spaces, "CO*5" for five.
+         The order is the drawing order: it fills the sites of `geom` one by
+         one (a chelate fills two). For complexes with several metals, list
+         the μ-ligands first, then the ligands of the first metal, then the
+         second, ...
+ve, os   the electron count per metal and the oxidation state as textbooks
+         give them. build.py works both out from the ligands and stops when
+         they differ, so every card is counted twice.
+geom     the drawing layout (see build.py), or None for formula only.
+fam      for the complexes with a common name: the family they belong to.
+         Name it uses these; on Hard its wrong answers come from the same
+         family.
+mm       metal–metal bonds.
+no_os    True when the oxidation state depends on a convention (linear NO):
+         such cards never ask for the oxidation state or dⁿ.
+shape    the real geometry, for the Geometry questions, when it is not the one
+         the drawing layout implies ("sqpy", "tprism"), or "" to never ask it.
+         build.py takes it from `geom` otherwise (see SHAPE_OF_GEOM there).
+
+Counting conventions (stated on the page as well):
+- covalent count: Green's neutral-ligand (L/X) method; ionic count: ligands
+  as closed-shell ions. Both give the same total.
+- Linear NO is a 3-electron LX ligand (NO⁺ in the ionic count).
+- Grubbs alkylidenes count as neutral 2-electron carbenes (Ru(II)); Schrock
+  alkylidenes, oxo and imido as X2 / LX2 (high oxidation states). Linear imido
+  gives 4 electrons. π-donation from oxo, alkoxide and amide is not counted.
+- Cyclobutadiene is counted as a neutral 4-electron L2 ligand.
+- A μ-CO is a 2-electron ligand shared by two metals; each M–M bond gives one
+  electron to each metal.
+"""
+
+
+def C(name, formula, metal, charge, ligands, ve, os, geom, note="", fam=None, mm=0, no_os=False, shape=None):
+    return dict(name=name, formula=formula, metal=metal, charge=charge, ligands=ligands, ve=ve, os=os,
+                geom=geom, note=note, fam=fam, mm=mm, no_os=no_os, shape=shape)
+
+
+SOURCES = {
+    "label": "Standard textbook counts (Crabtree; Hartwig; Green & Parkin, J. Chem. Educ. 2014), recomputed for every card",
+    "url": "https://doi.org/10.1021/ed400504f",
+}
+
+NO_NOTE = "Linear NO: 3 e as a neutral ligand, or NO⁺ (2 e) in the ionic count. The oxidation state depends on that choice."
+
+CORE = [
+    C("Nickel tetracarbonyl", "Ni(CO)₄", "Ni", 0, "CO*4", 18, 0, "tet4"),
+    C("Iron pentacarbonyl", "Fe(CO)₅", "Fe", 0, "CO*5", 18, 0, "tbp5"),
+    C("Chromium hexacarbonyl", "Cr(CO)₆", "Cr", 0, "CO*6", 18, 0, "oct6"),
+    C("Vanadium hexacarbonyl", "V(CO)₆", "V", 0, "CO*6", 17, 0, "oct6",
+      "One of the few stable 17-electron complexes; it is easily reduced to [V(CO)₆]⁻."),
+    C("Tetracarbonylcobaltate", "[Co(CO)₄]⁻", "Co", -1, "CO*4", 18, -1, "tet4",
+      "The negative charge adds one electron in the neutral count."),
+    C("Cobalt tetracarbonyl hydride", "HCo(CO)₄", "Co", 0, "H CO*4", 18, 1, "tbp5",
+      "The hydroformylation catalyst. H is an X ligand, so cobalt is Co(I)."),
+    C("Dimanganese decacarbonyl", "Mn₂(CO)₁₀", "Mn2", 0, "CO*10", 18, 0, "d-mm5",
+      "Each Mn has 17 e from Mn + 5 CO; the Mn–Mn bond adds one more to each.", mm=1),
+    C("Dicobalt octacarbonyl", "Co₂(CO)₈", "Co2", 0, "mu-CO*2 CO*6", 18, 0, "d-co2",
+      "Two bridging CO and a Co–Co bond.", mm=1),
+    C("Collman's reagent", "Na₂[Fe(CO)₄]", "Fe", -2, "CO*4", 18, -2, "tet4",
+      "A carbonyl dianion: iron is Fe(−II), d¹⁰.", fam="carbonyls and carbenes"),
+    C("Ferrocene", "Cp₂Fe", "Fe", 0, "Cp*2", 18, 2, "sand", fam="metallocenes"),
+    C("Cobaltocene", "Cp₂Co", "Co", 0, "Cp*2", 19, 2, "sand",
+      "19 electrons: cobaltocene is a strong reductant that readily loses one.", fam="metallocenes"),
+    C("Cobaltocenium", "[Cp₂Co]⁺", "Co", 1, "Cp*2", 18, 3, "sand", fam="metallocenes"),
+    C("Benzene chromium tricarbonyl", "(η⁶-C₆H₆)Cr(CO)₃", "Cr", 0, "C6H6 CO*3", 18, 0, "ps3"),
+    C("Cymantrene", "CpMn(CO)₃", "Mn", 0, "Cp CO*3", 18, 1, "ps3", fam="carbonyls and carbenes"),
+    C("Methylmanganese pentacarbonyl", "MeMn(CO)₅", "Mn", 0, "Me CO*5", 18, 1, "oct6",
+      "The classic substrate for CO migratory insertion."),
+    C("Wilkinson's catalyst", "RhCl(PPh₃)₃", "Rh", 0, "Cl PPh3 PPh3 PPh3", 16, 1, "sqpl4",
+      "Square-planar d⁸: 16 electrons is the stable count here.", fam="hydrogenation"),
+    C("Vaska's complex", "trans-IrCl(CO)(PPh₃)₂", "Ir", 0, "Cl PPh3 CO PPh3", 16, 1, "sqpl4",
+      "Adds H₂, O₂ or MeI by oxidative addition to give 18-electron Ir(III).", fam="hydrogenation"),
+    C("Zeise's salt", "K[PtCl₃(η²-C₂H₄)]", "Pt", -1, "Cl*3 C2H4", 16, 2, "sqpl4",
+      "The first organometallic complex (1827). Ethylene is a 2-electron L ligand.", fam="Pd and Pt"),
+    C("Cisplatin", "cis-PtCl₂(NH₃)₂", "Pt", 0, "Cl Cl NH3 NH3", 16, 2, "sqpl4", fam="platinum drugs"),
+    C("Tetrachloroplatinate", "[PtCl₄]²⁻", "Pt", -2, "Cl*4", 16, 2, "sqpl4"),
+    C("Tetracyanonickelate", "[Ni(CN)₄]²⁻", "Ni", -2, "CN*4", 16, 2, "sqpl4"),
+    C("Tetrakis(triphenylphosphine)palladium", "Pd(PPh₃)₄", "Pd", 0, "PPh3*4", 18, 0, "tet4",
+      "\"Tetrakis\". In solution it loses PPh₃ to give the reactive 14- and 16-electron species.", fam="Pd and Pt"),
+    C("Bis(cyclooctadiene)nickel", "Ni(cod)₂", "Ni", 0, "cod cod", 18, 0, "tet22", fam="Pd and Pt"),
+    C("Titanocene dichloride", "Cp₂TiCl₂", "Ti", 0, "Cp Cp Cl Cl", 16, 4, "bent2", fam="Ti and Zr reagents"),
+    C("Zirconocene dichloride", "Cp₂ZrCl₂", "Zr", 0, "Cp Cp Cl Cl", 16, 4, "bent2", fam="Ti and Zr reagents"),
+    C("Grubbs catalyst, 1st generation", "RuCl₂(PCy₃)₂(=CHPh)", "Ru", 0, "CHPh PCy3 Cl PCy3 Cl", 16, 2, "sqpy5",
+      "The benzylidene is counted as a neutral 2-electron carbene, so ruthenium is Ru(II).", fam="metathesis"),
+    C("Hexamethyltungsten", "WMe₆", "W", 0, "Me*6", 12, 6, "oct6",
+      "Only 12 electrons, yet stable: d⁰, and no easy decomposition path. It is a trigonal prism, not an octahedron: "
+      "with no π-donor ligands, a d⁰ ML₆ prefers the prism.", shape="tprism"),
+    C("Hexaamminecobalt(III)", "[Co(NH₃)₆]³⁺", "Co", 3, "NH3*6", 18, 3, "oct6"),
+    C("Hexacyanoferrate(II)", "[Fe(CN)₆]⁴⁻", "Fe", -4, "CN*6", 18, 2, "oct6", "Ferrocyanide."),
+    C("Hexacyanoferrate(III)", "[Fe(CN)₆]³⁻", "Fe", -3, "CN*6", 17, 3, "oct6", "Ferricyanide."),
+    C("Hexaaquatitanium(III)", "[Ti(H₂O)₆]³⁺", "Ti", 3, "H2O*6", 13, 3, "oct6",
+      "Coordination complexes of early metals are often far below 18 electrons."),
+    C("Tetraamminecopper(II)", "[Cu(NH₃)₄]²⁺", "Cu", 2, "NH3*4", 17, 2, "sqpl4"),
+]
+
+CARBONYLS = [
+    C("Molybdenum hexacarbonyl", "Mo(CO)₆", "Mo", 0, "CO*6", 18, 0, "oct6"),
+    C("Tungsten hexacarbonyl", "W(CO)₆", "W", 0, "CO*6", 18, 0, "oct6"),
+    C("Ruthenium pentacarbonyl", "Ru(CO)₅", "Ru", 0, "CO*5", 18, 0, "tbp5"),
+    C("Hexacarbonylvanadate", "[V(CO)₆]⁻", "V", -1, "CO*6", 18, -1, "oct6"),
+    C("Hexacarbonylmanganese(I)", "[Mn(CO)₆]⁺", "Mn", 1, "CO*6", 18, 1, "oct6",
+      "The positive charge removes one electron in the neutral count."),
+    C("Hexacarbonylrhenium(I)", "[Re(CO)₆]⁺", "Re", 1, "CO*6", 18, 1, "oct6"),
+    C("Pentacarbonylmanganate", "[Mn(CO)₅]⁻", "Mn", -1, "CO*5", 18, -1, "tbp5"),
+    C("Pentacarbonylchromate", "[Cr(CO)₅]²⁻", "Cr", -2, "CO*5", 18, -2, "tbp5"),
+    C("Pentacarbonylmanganese radical", "•Mn(CO)₅", "Mn", 0, "CO*5", 17, 0, "sqpy5",
+      "Made by breaking the Mn–Mn bond of Mn₂(CO)₁₀ with light; it dimerises back."),
+    C("Dirhenium decacarbonyl", "Re₂(CO)₁₀", "Re2", 0, "CO*10", 18, 0, "d-mm5", mm=1),
+    C("Diiron nonacarbonyl", "Fe₂(CO)₉", "Fe2", 0, "mu-CO*3 CO*6", 18, 0, None,
+      "Three bridging CO; the Fe–Fe bond is needed to reach 18.", mm=1),
+    C("Triiron dodecacarbonyl", "Fe₃(CO)₁₂", "Fe3", 0, "mu-CO*2 CO*10", 18, 0, None,
+      "A triangle of three Fe–Fe bonds; two CO bridge one edge.", mm=3),
+    C("Triruthenium dodecacarbonyl", "Ru₃(CO)₁₂", "Ru3", 0, "CO*12", 18, 0, "tri",
+      "Each Ru: 8 + 4 CO + 2 Ru–Ru bonds = 18.", mm=3),
+    C("Triosmium dodecacarbonyl", "Os₃(CO)₁₂", "Os3", 0, "CO*12", 18, 0, "tri", mm=3),
+    C("Tetrairidium dodecacarbonyl", "Ir₄(CO)₁₂", "Ir4", 0, "CO*12", 18, 0, None,
+      "A tetrahedron: each Ir has three CO and three Ir–Ir bonds.", mm=6),
+    C("Pentacarbonylmanganese hydride", "HMn(CO)₅", "Mn", 0, "H CO*5", 18, 1, "oct6"),
+    C("Iron tetracarbonyl dihydride", "H₂Fe(CO)₄", "Fe", 0, "H H CO*4", 18, 2, "oct6"),
+    C("Pentacarbonylhydridoiron(II)", "[HFe(CO)₅]⁺", "Fe", 1, "H CO*5", 18, 2, "oct6",
+      "Fe(CO)₅ protonated on the metal: protonation is an oxidation of the metal by two."),
+    C("Bromopentacarbonylmanganese", "Mn(CO)₅Br", "Mn", 0, "Br CO*5", 18, 1, "oct6"),
+    C("Acetylmanganese pentacarbonyl", "MeC(O)Mn(CO)₅", "Mn", 0, "COMe CO*5", 18, 1, "oct6",
+      "Product of CO insertion into MeMn(CO)₅ (after a CO adds back)."),
+    C("Acetylmanganese tetracarbonyl", "MeC(O)Mn(CO)₄", "Mn", 0, "COMe CO*4", 16, 1, "sqpy5",
+      "The 16-electron intermediate right after migratory insertion; it picks up a ligand to return to 18."),
+    C("Tetracarbonyl(triphenylphosphine)iron", "Fe(CO)₄(PPh₃)", "Fe", 0, "PPh3 CO*4", 18, 0, "tbp5"),
+    C("Tricarbonylbis(triphenylphosphine)iron", "Fe(CO)₃(PPh₃)₂", "Fe", 0, "PPh3 PPh3 CO*3", 18, 0, "tbp5"),
+    C("Tricarbonyl(triphenylphosphine)nickel", "Ni(CO)₃(PPh₃)", "Ni", 0, "PPh3 CO*3", 18, 0, "tet4"),
+    C("Tris(acetonitrile)molybdenum tricarbonyl", "fac-Mo(CO)₃(MeCN)₃", "Mo", 0, "CO CO CO MeCN MeCN MeCN", 18, 0, "oct6",
+      "A source of Mo(CO)₃: the acetonitriles are easily replaced."),
+    C("Pentacarbonyl(THF)tungsten", "W(CO)₅(THF)", "W", 0, "THF CO*5", 18, 0, "oct6"),
+    C("Dicarbonyldinitrosyliron", "Fe(CO)₂(NO)₂", "Fe", 0, "NO NO CO CO", 18, -2, "tet4",
+      NO_NOTE + " Isoelectronic with Ni(CO)₄.", no_os=True),
+    C("Tricarbonylnitrosylcobalt", "Co(CO)₃(NO)", "Co", 0, "NO CO*3", 18, -1, "tet4", NO_NOTE, no_os=True),
+    C("Dicobalt hexacarbonyl alkyne complex", "Co₂(CO)₆(μ-PhC≡CPh)", "Co2", 0, "mu-PhCCPh CO*6", 18, 0, None,
+      "The alkyne gives two electrons to each Co, one π bond each. Used in the Nicholas and Pauson–Khand reactions.", mm=1),
+]
+
+PI = [
+    C("Ruthenocene", "Cp₂Ru", "Ru", 0, "Cp*2", 18, 2, "sand", fam="metallocenes"),
+    C("Ferrocenium", "[Cp₂Fe]⁺", "Fe", 1, "Cp*2", 17, 3, "sand",
+      "Ferrocene loses one electron easily and reversibly: the reference couple in electrochemistry.", fam="metallocenes"),
+    C("Nickelocene", "Cp₂Ni", "Ni", 0, "Cp*2", 20, 2, "sand",
+      "20 electrons, two of them in antibonding orbitals: nickelocene is paramagnetic and reactive.", fam="metallocenes"),
+    C("Chromocene", "Cp₂Cr", "Cr", 0, "Cp*2", 16, 2, "sand", fam="metallocenes"),
+    C("Vanadocene", "Cp₂V", "V", 0, "Cp*2", 15, 2, "sand", fam="metallocenes"),
+    C("Decamethylferrocene", "Cp*₂Fe", "Fe", 0, "Cpstar*2", 18, 2, "sand", fam="metallocenes"),
+    C("Bis(benzene)chromium", "(η⁶-C₆H₆)₂Cr", "Cr", 0, "C6H6*2", 18, 0, "sand",
+      "Neutral arenes: chromium stays Cr(0).", fam="metallocenes"),
+    C("Bis(benzene)chromium cation", "[(η⁶-C₆H₆)₂Cr]⁺", "Cr", 1, "C6H6*2", 17, 1, "sand"),
+    C("Cyclopentadienyl(benzene)iron cation", "[CpFe(η⁶-C₆H₆)]⁺", "Fe", 1, "Cp C6H6", 18, 2, "sand"),
+    C("Cyclopentadienylcobalt dicarbonyl", "CpCo(CO)₂", "Co", 0, "Cp CO CO", 18, 1, "ps2"),
+    C("Pentamethylcyclopentadienyliridium dicarbonyl", "Cp*Ir(CO)₂", "Ir", 0, "Cpstar CO CO", 18, 1, "ps2"),
+    C("Cyclopentadienylbis(ethylene)rhodium", "CpRh(η²-C₂H₄)₂", "Rh", 0, "Cp C2H4 C2H4", 18, 1, "ps2"),
+    C("Cyclopentadienylvanadium tetracarbonyl", "CpV(CO)₄", "V", 0, "Cp CO*4", 18, 1, "ps4"),
+    C("Fp dimer", "[CpFe(CO)₂]₂", "Fe2", 0, "mu-CO mu-CO Cp CO Cp CO", 18, 1, "d-fp",
+      "Each Fe: 8 + Cp 5 + CO 2 + two half-shared μ-CO (2) + Fe–Fe 1 = 18.", fam="carbonyls and carbenes", mm=1),
+    C("Fp methyl", "CpFe(CO)₂Me", "Fe", 0, "Cp Me CO CO", 18, 2, "ps3"),
+    C("Fp anion", "[CpFe(CO)₂]⁻", "Fe", -1, "Cp CO CO", 18, 0, "ps2", "Fp⁻, a strong nucleophile at iron."),
+    C("Cyclopentadienyliron tricarbonyl cation", "[CpFe(CO)₃]⁺", "Fe", 1, "Cp CO*3", 18, 2, "ps3"),
+    C("Cyclopentadienylmolybdenum tricarbonyl dimer", "[CpMo(CO)₃]₂", "Mo2", 0, "Cp CO*3 Cp CO*3", 18, 1, None, mm=1),
+    C("Cyclopentadienylmolybdenum tricarbonyl hydride", "CpMo(CO)₃H", "Mo", 0, "Cp CO*3 H", 18, 2, "ps4"),
+    C("Tungstenocene dihydride", "Cp₂WH₂", "W", 0, "Cp Cp H H", 18, 4, "bent2"),
+    C("Molybdenocene dichloride", "Cp₂MoCl₂", "Mo", 0, "Cp Cp Cl Cl", 18, 4, "bent2"),
+    C("Tantalocene trihydride", "Cp₂TaH₃", "Ta", 0, "Cp Cp H*3", 18, 5, "bent3"),
+    C("Rhenocene hydride", "Cp₂ReH", "Re", 0, "Cp Cp H", 18, 3, "bent1"),
+    C("Butadiene iron tricarbonyl", "(η⁴-C₄H₆)Fe(CO)₃", "Fe", 0, "C4H6 CO*3", 18, 0, "ps3"),
+    C("Cyclobutadiene iron tricarbonyl", "(η⁴-C₄H₄)Fe(CO)₃", "Fe", 0, "C4H4 CO*3", 18, 0, "ps3",
+      "Cyclobutadiene, unstable on its own, is tamed by the iron. Counted here as a neutral 4-electron diene."),
+    C("Allylcobalt tricarbonyl", "(η³-C₃H₅)Co(CO)₃", "Co", 0, "allyl CO*3", 18, 1, "ps3"),
+    C("Bis(allyl)nickel", "(η³-C₃H₅)₂Ni", "Ni", 0, "allyl allyl", 16, 2, "sand"),
+    C("Allylpalladium chloride dimer", "[(η³-C₃H₅)PdCl]₂", "Pd2", 0, "mu-Cl mu-Cl allyl allyl", 16, 2, "d-sqpl1",
+      "Each Pd: allyl (3) + one Cl as X (1) + the other Cl as L (2) + Pd 10 = 16.", fam="Pd and Pt"),
+    C("Cyclopentadienyltitanium trichloride", "CpTiCl₃", "Ti", 0, "Cp Cl*3", 12, 4, "ps3"),
+    C("Pentamethylcyclopentadienyltantalum tetramethyl", "Cp*TaMe₄", "Ta", 0, "Cpstar Me*4", 14, 5, "ps4"),
+    C("Zirconocene methyl cation", "[Cp₂ZrMe]⁺", "Zr", 1, "Cp Cp Me", 14, 4, "bent1",
+      "The active species in metallocene olefin polymerisation: 14 electrons and an open site.", fam="Ti and Zr reagents"),
+    C("Zirconocene dimethyl", "Cp₂ZrMe₂", "Zr", 0, "Cp Cp Me Me", 16, 4, "bent2"),
+    C("Nugent–RajanBabu reagent", "Cp₂TiCl", "Ti", 0, "Cp Cp Cl", 15, 3, "bent1",
+      "Ti(III), d¹: a one-electron reductant that opens epoxides to radicals.", fam="Ti and Zr reagents"),
+    C("Pentamethylcyclopentadienylrhodium dichloride dimer", "[Cp*RhCl₂]₂", "Rh2", 0, "mu-Cl mu-Cl Cpstar Cl Cpstar Cl", 18, 3, "d-ps",
+      "Each Rh: Rh 9 + Cp* 5 + Cl 1 + the bridging Cl pair 3 = 18."),
+    C("Dichloro(p-cymene)ruthenium dimer", "[RuCl₂(p-cymene)]₂", "Ru2", 0, "mu-Cl mu-Cl cymene Cl cymene Cl", 18, 2, "d-ps"),
+    C("Noyori transfer-hydrogenation catalyst", "RuCl(p-cymene)(TsDPEN)", "Ru", 0, "cymene Cl TsDPEN", 18, 2, "ps3",
+      "TsDPEN binds through an amine (L) and a sulfonamide nitrogen (X).", fam="hydrogenation"),
+    C("Pentamethylcyclopentadienylruthenium chloride cod", "Cp*RuCl(cod)", "Ru", 0, "Cpstar Cl cod", 18, 2, "ps3"),
+    C("Bergman's iridium dihydride", "Cp*Ir(PMe₃)H₂", "Ir", 0, "Cpstar PMe3 H H", 18, 3, "ps3",
+      "With light it loses H₂ to give 16-electron Cp*Ir(PMe₃), which breaks C–H bonds of alkanes."),
+    C("Trispyrazolylborate manganese tricarbonyl", "TpMn(CO)₃", "Mn", 0, "Tp CO*3", 18, 1, None,
+      "Tp⁻ is a 6-electron, facially binding analogue of Cp⁻."),
+]
+
+SQUARE = [
+    C("Tetrachloropalladate", "[PdCl₄]²⁻", "Pd", -2, "Cl*4", 16, 2, "sqpl4"),
+    C("Bis(triphenylphosphine)palladium dichloride", "trans-PdCl₂(PPh₃)₂", "Pd", 0, "Cl PPh3 Cl PPh3", 16, 2, "sqpl4"),
+    C("Dichloro(dppe)palladium", "PdCl₂(dppe)", "Pd", 0, "dppe Cl Cl", 16, 2, "sqpl4"),
+    C("Oxidative addition product", "trans-PdPh(Br)(PPh₃)₂", "Pd", 0, "Ph PPh3 Br PPh3", 16, 2, "sqpl4",
+      "Pd(0) + PhBr: oxidative addition raises the oxidation state by two and the count from 14 to 16."),
+    C("Bis(tri-tert-butylphosphine)palladium", "Pd(Pt-Bu₃)₂", "Pd", 0, "PtBu3 PtBu3", 14, 0, "lin2",
+      "Bulky phosphines keep Pd(0) two-coordinate and very reactive.", fam="Pd and Pt"),
+    C("Bis(triphenylphosphine)palladium", "Pd(PPh₃)₂", "Pd", 0, "PPh3 PPh3", 14, 0, "lin2",
+      "The species that does the oxidative addition in many cross-couplings."),
+    C("Tetrakis(triphenylphosphine)platinum", "Pt(PPh₃)₄", "Pt", 0, "PPh3*4", 18, 0, "tet4"),
+    C("Tris(triphenylphosphine)platinum", "Pt(PPh₃)₃", "Pt", 0, "PPh3*3", 16, 0, "trig3"),
+    C("Ethylenebis(triphenylphosphine)platinum", "Pt(PPh₃)₂(η²-C₂H₄)", "Pt", 0, "C2H4 PPh3 PPh3", 16, 0, "trig3"),
+    C("Dimethyl(cod)platinum", "PtMe₂(cod)", "Pt", 0, "cod Me Me", 16, 2, "sqpl4"),
+    C("Allylpalladium bis(phosphine) cation", "[(η³-C₃H₅)Pd(PPh₃)₂]⁺", "Pd", 1, "allyl PPh3 PPh3", 16, 2, "trig3",
+      "The intermediate attacked by the nucleophile in the Tsuji–Trost reaction.", shape=""),
+    C("PEPPSI-IPr", "PdCl₂(IPr)(3-Cl-py)", "Pd", 0, "IPr Cl Clpy Cl", 16, 2, "sqpl4", fam="Pd and Pt"),
+    C("Carboplatin", "Pt(NH₃)₂(cbdca)", "Pt", 0, "NH3 NH3 cbdca", 16, 2, "sqpl4", fam="platinum drugs"),
+    C("Oxaliplatin", "Pt(dach)(ox)", "Pt", 0, "dach ox", 16, 2, "sqpl4", fam="platinum drugs"),
+    C("Tetraammineplatinum(II)", "[Pt(NH₃)₄]²⁺", "Pt", 2, "NH3*4", 16, 2, "sqpl4"),
+    C("Hydridochlorobis(triethylphosphine)platinum", "trans-PtHCl(PEt₃)₂", "Pt", 0, "H PEt3 Cl PEt3", 16, 2, "sqpl4"),
+    C("Rhodium dicarbonyl chloride dimer", "[Rh(CO)₂Cl]₂", "Rh2", 0, "mu-Cl mu-Cl CO CO CO CO", 16, 1, "d-sqpl"),
+    C("Chloro(cod)rhodium dimer", "[Rh(cod)Cl]₂", "Rh2", 0, "mu-Cl mu-Cl cod cod", 16, 1, "d-sqpl"),
+    C("Chloro(cod)iridium dimer", "[Ir(cod)Cl]₂", "Ir2", 0, "mu-Cl mu-Cl cod cod", 16, 1, "d-sqpl"),
+    C("Acetylacetonatodicarbonylrhodium", "Rh(acac)(CO)₂", "Rh", 0, "acac CO CO", 16, 1, "sqpl4"),
+    C("Monsanto catalyst", "[Rh(CO)₂I₂]⁻", "Rh", -1, "CO I CO I", 16, 1, "sqpl4",
+      "cis-[Rh(CO)₂I₂]⁻ makes acetic acid from methanol and CO.", fam="industrial and oxidation catalysts"),
+    C("Cativa catalyst", "[Ir(CO)₂I₂]⁻", "Ir", -1, "CO I CO I", 16, 1, "sqpl4",
+      "The iridium successor of the Monsanto process.", fam="industrial and oxidation catalysts"),
+    C("Crabtree's catalyst", "[Ir(cod)(PCy₃)(py)]⁺", "Ir", 1, "cod PCy3 py", 16, 1, "sqpl4", fam="hydrogenation"),
+    C("Rhodium cod dppe cation", "[Rh(cod)(dppe)]⁺", "Rh", 1, "cod dppe", 16, 1, "sqpl4",
+      "A precursor for asymmetric hydrogenation when dppe is replaced by a chiral diphosphine.", fam="hydrogenation"),
+    C("Hydridocarbonyltris(triphenylphosphine)rhodium", "RhH(CO)(PPh₃)₃", "Rh", 0, "H PPh3 PPh3 PPh3 CO", 18, 1, "tbp5",
+      "A hydroformylation catalyst."),
+    C("Tetrakis(triphenylphosphine)nickel", "Ni(PPh₃)₄", "Ni", 0, "PPh3*4", 18, 0, "tet4"),
+    C("Dichlorobis(triphenylphosphine)nickel", "NiCl₂(PPh₃)₂", "Ni", 0, "Cl Cl PPh3 PPh3", 16, 2, "tet4",
+      "Tetrahedral, not square planar, but still 16 electrons."),
+    C("Dichloro(dppe)nickel", "NiCl₂(dppe)", "Ni", 0, "dppe Cl Cl", 16, 2, "sqpl4"),
+    C("Chlorotris(triphenylphosphine)cobalt", "CoCl(PPh₃)₃", "Co", 0, "Cl PPh3*3", 16, 1, "tet4"),
+    C("Tetrachloroaurate", "[AuCl₄]⁻", "Au", -1, "Cl*4", 16, 3, "sqpl4", "Au(III) is d⁸, like Pt(II)."),
+    C("Chloro(triphenylphosphine)gold", "Au(PPh₃)Cl", "Au", 0, "PPh3 Cl", 14, 1, "lin2",
+      "Linear d¹⁰ Au(I): 14 electrons is normal for gold(I)."),
+    C("Dicyanoaurate", "[Au(CN)₂]⁻", "Au", -1, "CN CN", 14, 1, "lin2"),
+    C("Diamminesilver", "[Ag(NH₃)₂]⁺", "Ag", 1, "NH3 NH3", 14, 1, "lin2", "Tollens' reagent."),
+    C("Gilman cuprate", "[CuMe₂]⁻", "Cu", -1, "Me Me", 14, 1, "lin2", "As in Me₂CuLi."),
+    C("Tetrakis(acetonitrile)copper(I)", "[Cu(MeCN)₄]⁺", "Cu", 1, "MeCN*4", 18, 1, "tet4"),
+]
+
+HYDRIDES = [
+    C("Nonahydridorhenate", "[ReH₉]²⁻", "Re", -2, "H*9", 18, 7, None,
+      "Nine hydrides, Re(VII), d⁰: a coordination number of 9."),
+    C("Hexahydridotris(trimethylphosphine)tungsten", "WH₆(PMe₃)₃", "W", 0, "H*6 PMe3*3", 18, 6, None),
+    C("Hexahydridoferrate", "[FeH₆]⁴⁻", "Fe", -4, "H*6", 18, 2, "oct6", "As in Mg₂FeH₆, a hydrogen-storage material."),
+    C("Kubas' complex", "W(CO)₃(P(i-Pr)₃)₂(η²-H₂)", "W", 0, "PiPr3 H2 CO CO CO PiPr3", 18, 0, "oct6",
+      "The first σ-H₂ complex: H₂ binds intact as a 2-electron L ligand, so W stays W(0).", fam="carbonyls and carbenes"),
+    C("Pentahydridobis(triisopropylphosphine)iridium", "IrH₅(P(i-Pr)₃)₂", "Ir", 0, "H*5 PiPr3 PiPr3", 18, 5, None),
+    C("Bis(dihydrogen)ruthenium dihydride", "RuH₂(η²-H₂)₂(PCy₃)₂", "Ru", 0, "PCy3 H H2 H2 H PCy3", 18, 2, "oct6",
+      "Two H are hydrides (X) and two H₂ are σ-complexes (L)."),
+    C("Vaska's complex + H₂", "IrH₂Cl(CO)(PPh₃)₂", "Ir", 0, "PPh3 H H Cl CO PPh3", 18, 3, "oct6",
+      "Oxidative addition of H₂: two new X ligands, Ir(I) → Ir(III), 16 → 18 electrons."),
+    C("Vaska's complex + MeI", "IrMe(I)Cl(CO)(PPh₃)₂", "Ir", 0, "PPh3 Me Cl I CO PPh3", 18, 3, "oct6"),
+    C("Monsanto oxidative addition product", "[RhMe(I)₃(CO)₂]⁻", "Rh", -1, "Me CO I I CO I", 18, 3, "oct6"),
+    C("Titanium tetrachloride", "TiCl₄", "Ti", 0, "Cl*4", 8, 4, "tet4",
+      "Only 8 electrons: a strong Lewis acid."),
+    C("Tetrakis(dimethylamido)titanium", "Ti(NMe₂)₄", "Ti", 0, "NMe2*4", 8, 4, "tet4",
+      "8 electrons if the N lone pairs are not counted; π-donation makes up some of the gap."),
+    C("Titanium isopropoxide", "Ti(Oi-Pr)₄", "Ti", 0, "OiPr*4", 8, 4, "tet4"),
+    C("Tungsten hexachloride", "WCl₆", "W", 0, "Cl*6", 12, 6, "oct6"),
+    C("Pentamethyltantalum", "TaMe₅", "Ta", 0, "Me*5", 10, 5, "tbp5",
+      "Square pyramidal, not trigonal bipyramidal: d⁰ ML₅ with only σ-donors often prefers the pyramid.", shape="sqpy"),
+    C("Schrock's first alkylidene", "Ta(CH₂t-Bu)₃(=CHt-Bu)", "Ta", 0, "CHtBu CH2tBu*3", 10, 5, "tet4",
+      "A Schrock alkylidene is an X2 ligand: Ta(V), d⁰."),
+    C("Schrock's catalyst", "Mo(=NAr)(=CHCMe₂Ph)(OCMe(CF₃)₂)₂", "Mo", 0, "NAr CHCMe2Ph ORF6 ORF6", 14, 6, "tet4",
+      "Counting the linear imido as a 4-electron LX2 ligand; Mo(VI), d⁰.", fam="metathesis"),
+    C("Schrock alkylidyne", "W(≡Ct-Bu)(Ot-Bu)₃", "W", 0, "CtBu OtBu*3", 12, 6, "tet4",
+      "An alkyne-metathesis catalyst. The alkylidyne is X3.", fam="metathesis"),
+    C("Tebbe methylidene", "Cp₂Ti=CH₂", "Ti", 0, "Cp Cp CH2", 16, 4, "bent1",
+      "The reactive species released from Tebbe's reagent.", fam="metathesis"),
+    C("Petasis reagent", "Cp₂TiMe₂", "Ti", 0, "Cp Cp Me Me", 16, 4, "bent2", fam="Ti and Zr reagents"),
+    C("Schwartz's reagent", "Cp₂Zr(H)Cl", "Zr", 0, "Cp Cp H Cl", 16, 4, "bent2",
+      "Hydrozirconation of alkenes and alkynes.", fam="Ti and Zr reagents"),
+    C("Grubbs catalyst, 2nd generation", "RuCl₂(SIMes)(PCy₃)(=CHPh)", "Ru", 0, "CHPh SIMes Cl PCy3 Cl", 16, 2, "sqpy5",
+      fam="metathesis"),
+    C("Hoveyda–Grubbs catalyst, 2nd generation", "RuCl₂(SIMes)(=CH-o-Oi-PrC₆H₄)", "Ru", 0, "HGcarb Cl SIMes Cl", 16, 2, "sqpy5",
+      "The ether oxygen of the chelating benzylidene replaces PCy₃ as the L ligand.", fam="metathesis"),
+    C("Fischer carbene", "(CO)₅W=C(OMe)Ph", "W", 0, "COMePh CO*5", 18, 0, "oct6",
+      "A Fischer carbene is a neutral 2-electron L ligand: W(0).", fam="carbonyls and carbenes"),
+    C("Fischer methyl carbene", "(CO)₅Cr=C(OMe)Me", "Cr", 0, "COMeMe CO*5", 18, 0, "oct6"),
+    C("Methyltrioxorhenium", "MeReO₃", "Re", 0, "Me O O O", 14, 7, "tet4",
+      "MTO. Counting each oxo as X2; π-donation from O would add more.", fam="industrial and oxidation catalysts"),
+    C("Osmium tetroxide", "OsO₄", "Os", 0, "O*4", 16, 8, "tet4", "Os(VIII), d⁰."),
+    C("Ruthenium tetroxide", "RuO₄", "Ru", 0, "O*4", 16, 8, "tet4"),
+    C("Permanganate", "[MnO₄]⁻", "Mn", -1, "O*4", 16, 7, "tet4"),
+    C("Nitridotetrachloroosmate", "[OsNCl₄]⁻", "Os", -1, "N Cl*4", 16, 6, "sqpy5", "The nitride is an X3 ligand."),
+    C("Dioxotetrapyridinerhenium(V)", "trans-[ReO₂(py)₄]⁺", "Re", 1, "O py py py py O", 18, 5, "oct6"),
+    C("Chatt's dinitrogen complex", "trans-Mo(N₂)₂(dppe)₂", "Mo", 0, "N2 dppe dppe N2", 18, 0, "oct6b",
+      "N₂ is a weak 2-electron L ligand, like CO.", fam="carbonyls and carbenes"),
+]
+
+WERNER = [
+    C("Chloropentaamminecobalt(III)", "[CoCl(NH₃)₅]²⁺", "Co", 2, "Cl NH3*5", 18, 3, "oct6"),
+    C("Tris(ethylenediamine)cobalt(III)", "[Co(en)₃]³⁺", "Co", 3, "en en en", 18, 3, "hex6"),
+    C("cis-Dichlorobis(ethylenediamine)cobalt(III)", "cis-[CoCl₂(en)₂]⁺", "Co", 1, "Cl Cl en en", 18, 3, "hex6"),
+    C("Hexaaquacobalt(II)", "[Co(H₂O)₆]²⁺", "Co", 2, "H2O*6", 19, 2, "oct6"),
+    C("Tetrachlorocobaltate", "[CoCl₄]²⁻", "Co", -2, "Cl*4", 15, 2, "tet4", "The blue of cobalt chloride humidity indicators."),
+    C("Hexaaquairon(II)", "[Fe(H₂O)₆]²⁺", "Fe", 2, "H2O*6", 18, 2, "oct6",
+      "18 electrons, but high spin: weak-field ligands put electrons in antibonding orbitals."),
+    C("Hexaaquairon(III)", "[Fe(H₂O)₆]³⁺", "Fe", 3, "H2O*6", 17, 3, "oct6"),
+    C("Ferrioxalate", "[Fe(C₂O₄)₃]³⁻", "Fe", -3, "ox ox ox", 17, 3, "hex6", "Each oxalate is a dianionic X2 chelate."),
+    C("Tris(bipyridine)iron(II)", "[Fe(bpy)₃]²⁺", "Fe", 2, "bpy bpy bpy", 18, 2, "hex6"),
+    C("Tris(bipyridine)ruthenium(II)", "[Ru(bpy)₃]²⁺", "Ru", 2, "bpy bpy bpy", 18, 2, "hex6",
+      "The classic photoredox catalyst."),
+    C("Hexaaquachromium(III)", "[Cr(H₂O)₆]³⁺", "Cr", 3, "H2O*6", 15, 3, "oct6"),
+    C("Hexaamminechromium(III)", "[Cr(NH₃)₆]³⁺", "Cr", 3, "NH3*6", 15, 3, "oct6"),
+    C("Hexacyanochromate(III)", "[Cr(CN)₆]³⁻", "Cr", -3, "CN*6", 15, 3, "oct6"),
+    C("Hexaaquamanganese(II)", "[Mn(H₂O)₆]²⁺", "Mn", 2, "H2O*6", 17, 2, "oct6"),
+    C("Hexacyanomanganate(III)", "[Mn(CN)₆]³⁻", "Mn", -3, "CN*6", 16, 3, "oct6"),
+    C("Hexaaquavanadium(III)", "[V(H₂O)₆]³⁺", "V", 3, "H2O*6", 14, 3, "oct6"),
+    C("Hexaaquanickel(II)", "[Ni(H₂O)₆]²⁺", "Ni", 2, "H2O*6", 20, 2, "oct6"),
+    C("Hexaamminenickel(II)", "[Ni(NH₃)₆]²⁺", "Ni", 2, "NH3*6", 20, 2, "oct6"),
+    C("Tetrachloronickelate", "[NiCl₄]²⁻", "Ni", -2, "Cl*4", 16, 2, "tet4",
+      "Tetrahedral, although Ni(II) is d⁸: chloride is a weak-field ligand, unlike cyanide in square-planar [Ni(CN)₄]²⁻."),
+    C("Hexaaquacopper(II)", "[Cu(H₂O)₆]²⁺", "Cu", 2, "H2O*6", 21, 2, "oct6",
+      "Jahn–Teller distorted: two water molecules sit far from the copper."),
+    C("Tetrachlorocuprate", "[CuCl₄]²⁻", "Cu", -2, "Cl*4", 17, 2, "tet4",
+      "A flattened tetrahedron: d⁹ Cu(II) is Jahn–Teller distorted."),
+    C("Hexaaquazinc", "[Zn(H₂O)₆]²⁺", "Zn", 2, "H2O*6", 22, 2, "oct6",
+      "Zinc(II) is d¹⁰; counting electrons tells you little for group 12."),
+    C("Octacyanomolybdate(IV)", "[Mo(CN)₈]⁴⁻", "Mo", -4, "CN*8", 18, 4, None),
+    C("Hexachloroplatinate", "[PtCl₆]²⁻", "Pt", -2, "Cl*6", 18, 4, "oct6", "As in H₂PtCl₆, Speier's catalyst.", fam="Pd and Pt"),
+    C("Hexachloroiridate(III)", "[IrCl₆]³⁻", "Ir", -3, "Cl*6", 18, 3, "oct6"),
+    C("Hexachloroiridate(IV)", "[IrCl₆]²⁻", "Ir", -2, "Cl*6", 17, 4, "oct6"),
+    C("Tris(acetylacetonato)cobalt", "Co(acac)₃", "Co", 0, "acac acac acac", 18, 3, "hex6"),
+    C("Tris(acetylacetonato)iron", "Fe(acac)₃", "Fe", 0, "acac acac acac", 17, 3, "hex6"),
+    C("Tris(acetylacetonato)chromium", "Cr(acac)₃", "Cr", 0, "acac acac acac", 15, 3, "hex6"),
+    C("Pentaammine(dinitrogen)ruthenium(II)", "[Ru(NH₃)₅(N₂)]²⁺", "Ru", 2, "N2 NH3*5", 18, 2, "oct6",
+      "The first dinitrogen complex (1965)."),
+    C("Jacobsen's catalyst", "Mn(salen)Cl", "Mn", 0, "jsalen Cl", 14, 3, "pl4axl",
+      "Salen is a dianionic L2X2 ligand: Mn(III), d⁴.", fam="industrial and oxidation catalysts"),
+    C("Salcomine", "Co(salen)", "Co", 0, "salen", 15, 2, "pl4", "Co(II), d⁷; it binds O₂ reversibly."),
+    C("Chloro(porphyrinato)iron(III)", "Fe(por)Cl", "Fe", 0, "por Cl", 15, 3, "pl4ax",
+      "The core of hemin; the porphyrin dianion is L2X2."),
+]
+
+# the Ligands set: what each ligand gives, in the order cards are listed
+LIGAND_CARDS = [
+    "CO", "PPh3", "PMe3", "NH3", "H2O", "py", "MeCN", "N2", "H2", "C2H4", "SIMes", "CHPh", "COMePh",
+    "H", "Cl", "Me", "Ph", "COMe", "CN", "OMe", "NMe2",
+    "O", "CH2", "N", "CtBu", "ox",
+    "bpy", "en", "dppe", "cod", "C4H6", "C6H6", "terpy",
+    "allyl", "acac", "OAc2", "NO", "NObent", "Cp", "Cpstar", "Tp", "NAr", "salen", "por",
+    "mu-Cl", "mu-CO", "mu-H",
+]
+
+SETS = [
+    {"id": "core", "name": "Textbook essentials", "kind": "complex", "cards": CORE,
+     "desc": "The complexes most courses use to teach electron counting: carbonyls, metallocenes, the famous catalysts and a few Werner complexes.",
+     "source": SOURCES},
+    {"id": "ligands", "name": "Ligands", "kind": "ligand", "cards": LIGAND_CARDS,
+     "desc": "How many electrons each ligand gives, and its L/X class.",
+     "source": SOURCES},
+    {"id": "carbonyls", "name": "Metal carbonyls", "kind": "complex", "cards": CARBONYLS,
+     "desc": "Carbonyl anions and cations, hydrides, metal–metal bonds and clusters.",
+     "source": SOURCES},
+    {"id": "pi", "name": "Cp, arene & allyl complexes", "kind": "complex", "cards": PI,
+     "desc": "Metallocenes, piano stools, bent metallocenes and η³/η⁴/η⁶ ligands.",
+     "source": SOURCES},
+    {"id": "square", "name": "16- and 14-electron complexes", "kind": "complex", "cards": SQUARE,
+     "desc": "Square-planar d⁸, linear d¹⁰ and the low-coordinate catalysts of Rh, Ir, Ni, Pd, Pt, Cu and Au.",
+     "source": SOURCES},
+    {"id": "hydrides", "name": "Hydrides, alkyls & metal–carbon multiple bonds", "kind": "complex", "cards": HYDRIDES,
+     "desc": "Polyhydrides, σ-H₂, oxidative addition, d⁰ alkyls, carbenes, alkylidenes and oxo complexes.",
+     "source": SOURCES},
+    {"id": "werner", "name": "Coordination (Werner) complexes", "kind": "complex", "cards": WERNER,
+     "desc": "Aqua, ammine, cyano and chelate complexes, where 18 electrons is the exception rather than the rule.",
+     "source": SOURCES},
+]

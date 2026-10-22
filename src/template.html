@@ -1,0 +1,1878 @@
+<title>TMC Learn</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: study app. The options sit in a bar under the header (always visible); the left rail holds the sets; the main column swaps between Learn, Sort, Count it, Name it, Flashcards and Cards. Name it brings its own lists of named complexes into the rail. Structures sit on a paper panel with the metal haloed. */
+:root {
+  --logo-tile: #FFFFFF; --bg: #EDF1F4; --surface: #FFFFFF; --paper: #F6F8FA; --ink: #15212B; --muted: #566472; --line: #D3DBE2;
+  --accent: #0D5C78; --accent-ink: #FFFFFF; --accent-soft: #DAEAF1;
+  --good: #1B7548; --good-soft: #DCF0E4; --bad: #AD2A20; --bad-soft: #F7E0DC; --warn: #9A6206; --warn-soft: #F6EAD3;
+  --chip-s: 70%; --chip-l: 87%; --chip-ink: #15212B;
+  --m-c: #1B2731; --m-o: #C8261A; --m-n: #2045C4; --m-s: #9A7500; --m-x: #2A7A2F; --m-p: #BF560B; --m-m: #0B6E8C;
+  --hl: #F9CFE1; --hl-ink: #C0175A;
+  --mb-cov: #1D5FA8; --mb-cov-soft: #DCE9F7; --mb-ion: #6A3D9E; --mb-ion-soft: #ECE2F7;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --logo-tile: #E6ECF0; --bg: #0D1318; --surface: #151D24; --paper: #10171D; --ink: #E4EBF0; --muted: #94A3B0; --line: #27333D;
+    --accent: #5DB7D5; --accent-ink: #08212B; --accent-soft: #173341;
+    --good: #5FC88F; --good-soft: #143224; --bad: #F08A7F; --bad-soft: #3A1B18; --warn: #E2AE52; --warn-soft: #362812;
+    --chip-s: 42%; --chip-l: 27%; --chip-ink: #EEF3F7;
+    --m-c: #DCE5EC; --m-o: #FF8A7A; --m-n: #8DB2FF; --m-s: #E6C45A; --m-x: #7DD486; --m-p: #F2A765; --m-m: #6CC6E2;
+    --hl: #5A2140; --hl-ink: #FF8DC1;
+    --mb-cov: #8CBDF2; --mb-cov-soft: #16283B; --mb-ion: #C3A5EE; --mb-ion-soft: #291E38;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --logo-tile: #E6ECF0; --bg: #0D1318; --surface: #151D24; --paper: #10171D; --ink: #E4EBF0; --muted: #94A3B0; --line: #27333D;
+  --accent: #5DB7D5; --accent-ink: #08212B; --accent-soft: #173341;
+  --good: #5FC88F; --good-soft: #143224; --bad: #F08A7F; --bad-soft: #3A1B18; --warn: #E2AE52; --warn-soft: #362812;
+  --chip-s: 42%; --chip-l: 27%; --chip-ink: #EEF3F7;
+  --m-c: #DCE5EC; --m-o: #FF8A7A; --m-n: #8DB2FF; --m-s: #E6C45A; --m-x: #7DD486; --m-p: #F2A765; --m-m: #6CC6E2;
+  --hl: #5A2140; --hl-ink: #FF8DC1;
+  --mb-cov: #8CBDF2; --mb-cov-soft: #16283B; --mb-ion: #C3A5EE; --mb-ion-soft: #291E38;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--f-body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); }
+
+.wrap {
+  max-width: 1160px; margin: 0 auto; display: grid; gap: 18px;
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+h1 { margin: 0; font: 700 30px/1 var(--f-display); letter-spacing: -0.01em; }
+h1 span { font-weight: 500; color: var(--muted); }
+/* the ChemTrain logo sits on a light tile, so the dark locomotive reads in both themes */
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo-tile { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; background: var(--logo-tile); border: 1px solid var(--line); }
+.logo-tile:hover { border-color: var(--accent); }
+.logo-tile .logo { width: 27px; height: 38px; }
+.foot-brand { white-space: nowrap; }
+.foot-brand .logo { width: 20px; height: 22px; padding: 2px 4px; margin-right: 5px; vertical-align: -6px; background: var(--logo-tile); border-radius: 5px; }
+.tabs { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.tabs button { border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; color: var(--muted); cursor: pointer; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.indicator { height: 6px; border-radius: 3px; background: linear-gradient(90deg, hsl(0 72% 52%), hsl(56 80% 50%), hsl(112 55% 44%), hsl(168 60% 40%), hsl(224 62% 54%), hsl(280 52% 54%)); }
+
+.app { display: grid; gap: 22px; align-items: start; }
+@media (min-width: 940px) { .app { grid-template-columns: 300px minmax(0, 1fr); } }
+.side { display: grid; gap: 22px; min-width: 0; }
+.side > * { min-width: 0; }  /* or the sideways-scrolling set list widens the page on a phone */
+.main { display: grid; gap: 16px; min-width: 0; }
+.side-h { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* set picker */
+.sets { display: grid; gap: 8px; }
+@media (max-width: 939px) {
+  .sets { grid-auto-flow: column; grid-auto-columns: minmax(200px, 68%); overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+  .set { scroll-snap-align: start; }
+}
+@media (min-width: 600px) and (max-width: 939px) { .sets { grid-auto-columns: 230px; } }
+.set { display: grid; gap: 6px; min-width: 0; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; }
+.set:hover { border-color: var(--accent); }
+.set[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.set .nm { font-weight: 600; font-size: 14.5px; line-height: 1.25; }
+.set .meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.set .mini { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.set .mini i { display: block; height: 100%; background: var(--good); }
+
+/* options: a bar under the header, the same in every tab; controls a tab does not use are greyed out */
+.optbar { display: grid; gap: 10px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.optrow { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 18px; }
+.optfoot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.optfoot .help { font-size: 13px; max-width: 90ch; }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+.optbar .off { opacity: .45; }
+.optbar .off, .optbar .off * { cursor: not-allowed; }
+.field > .seg { display: flex; }
+.field > .seg button { flex: 1; white-space: nowrap; }
+.optrow > .field { flex: none; }
+/* on a phone: each group gets a full row */
+@media (max-width: 600px) { .optrow > .field { flex: 1 1 100%; } .field > .seg { flex-wrap: wrap; } .field > .seg button { padding: 6px 8px; } }
+
+.eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.help { margin: 0; font-size: 14px; color: var(--muted); max-width: 65ch; }
+.help code { font-family: var(--f-mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); padding: 0 4px; border-radius: 4px; }
+
+/* progress */
+.progress { display: grid; gap: 8px; }
+.bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); }
+.bar i { display: block; height: 100%; transition: width .35s ease; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.l0 { background: var(--line); } .l1 { background: var(--warn); } .l2 { background: var(--accent); } .l3 { background: var(--good); }
+.legend .l0 { background: var(--muted); }
+
+/* question panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(18px, 3.5vw, 28px); display: grid; gap: 18px; min-width: 0; }
+.qhead { display: grid; gap: 6px; }
+.qtop { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tags { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.term { margin: 0; font: 700 clamp(26px, 4.6vw, 36px)/1.12 var(--f-display); letter-spacing: -0.01em; text-wrap: balance; overflow-wrap: anywhere; }
+.term.mono { font-family: var(--f-mono); font-weight: 600; }
+.formula { margin: 0; font: 400 17px/1.4 var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+.conj { margin: 0; font-size: 15px; color: var(--muted); }
+.conj strong { color: var(--ink); font-weight: 600; }
+.ask { margin: 0; font-size: 15px; color: var(--muted); }
+.qmain { display: grid; gap: 14px; min-width: 0; }
+.qtext { display: grid; gap: 4px; min-width: 0; }
+.struct { margin: 0; display: flex; align-items: center; justify-content: center; padding: 18px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; min-height: 120px; min-width: 0; }
+.pill { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.pill[data-l="0"] { background: var(--line); color: var(--muted); }
+.pill[data-l="1"] { background: var(--warn-soft); color: var(--warn); }
+.pill[data-l="2"] { background: var(--accent-soft); color: var(--accent); }
+.pill[data-l="3"] { background: var(--good-soft); color: var(--good); }
+/* counting-method badges: covalent and ionic */
+.mb { display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border-radius: 999px; font: 600 12px/1.6 var(--f-body); white-space: nowrap; vertical-align: 1px; color: var(--mb-cov); background: var(--mb-cov-soft); }
+.mb::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.mb-ion { color: var(--mb-ion); background: var(--mb-ion-soft); }
+.mb.lg { font-size: 14.5px; padding: 1px 11px; vertical-align: 0; }
+.talso { font: 400 12px var(--f-mono); color: var(--muted); white-space: nowrap; }
+
+/* molecules: colours come from the theme */
+.mol { display: block; max-width: 100%; height: auto; overflow: visible; }
+.mol .b { fill: none; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+.mol .b.c { stroke: var(--m-c); } .mol .b.o { stroke: var(--m-o); } .mol .b.n { stroke: var(--m-n); }
+.mol .b.s { stroke: var(--m-s); } .mol .b.x { stroke: var(--m-x); } .mol .b.p { stroke: var(--m-p); }
+.mol .t.c { fill: var(--m-c); } .mol .t.o { fill: var(--m-o); } .mol .t.n { fill: var(--m-n); }
+.mol .t.s { fill: var(--m-s); } .mol .t.x { fill: var(--m-x); } .mol .t.p { fill: var(--m-p); }
+.mol .b.hh { stroke: var(--hl-ink); stroke-width: 1.8; }
+.mol .t.hh { fill: var(--hl-ink); }
+.mol .halo { fill: var(--hl); }
+.mol .ring { fill: none; stroke: var(--hl-ink); stroke-width: 1.2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) { .struct .mol .ring { animation: ping 1.4s ease-out .25s 2; } }
+@keyframes ping { from { opacity: .9; transform: scale(.8); } to { opacity: 0; transform: scale(2); } }
+
+/* answers */
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .options { grid-template-columns: 1fr; } }
+.opt { display: flex; align-items: center; gap: 12px; min-width: 0; text-align: left; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
+.opt:hover:not([disabled]) { border-color: var(--accent); }
+.opt[disabled] { cursor: default; }
+.opt .key { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; font: 600 12px var(--f-mono); color: var(--muted); }
+.opt .val { min-width: 0; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.opt .val.num { font: 600 21px var(--f-mono); font-variant-numeric: tabular-nums; }
+.opt .val small { font: 400 13px var(--f-mono); color: var(--muted); }
+.opt .othumb { display: flex; justify-content: flex-start; }
+.opt.rich { align-items: flex-start; }
+.opt.correct { border-color: var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.dim { opacity: .55; }
+.written { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.written input { flex: 1 1 180px; min-width: 0; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); font: 600 21px var(--f-mono); }
+.written input:focus { outline: none; border-color: var(--accent); }
+.btn { border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 600; font-size: 15px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+.btn.ghost:hover { border-color: var(--accent); }
+.btn.small { padding: 8px 12px; font-size: 13.5px; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 14px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row.end { justify-content: flex-end; }
+
+.feedback { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 12px; }
+.verdict { margin: 0; font: 700 21px var(--f-display); }
+.verdict.good { color: var(--good); } .verdict.bad { color: var(--bad); }
+.fbline { margin: 0; color: var(--muted); }
+.fbline strong { color: var(--ink); font-weight: 600; }
+.note { margin: 0; font-size: 14px; color: var(--muted); padding-left: 12px; border-left: 2px solid var(--line); }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 6px; font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; background: hsl(var(--h, 200) var(--chip-s) var(--chip-l)); color: var(--chip-ink); white-space: nowrap; }
+.chip.plain { background: var(--line); }
+
+/* electron-count scale */
+.scale { position: relative; height: 92px; margin: 0 4px; }
+.scale .track { position: absolute; left: 0; right: 0; top: 30px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, hsl(0 72% 52%), hsl(56 80% 50%), hsl(112 55% 44%), hsl(168 60% 40%), hsl(224 62% 54%), hsl(280 52% 54%)); }
+.scale .tick { position: absolute; top: 72px; transform: translateX(-50%); font: 400 11px var(--f-mono); color: var(--muted); }
+.scale .tick::before { content: ""; position: absolute; left: 50%; top: -30px; height: 6px; border-left: 1px solid var(--muted); }
+.scale .mark { position: absolute; transform: translateX(-50%); font: 600 12px var(--f-mono); white-space: nowrap; }
+.scale .mark.ans { top: 0; color: var(--ink); }
+.scale .mark.ans::after { content: ""; position: absolute; left: 50%; top: 18px; height: 24px; border-left: 2px solid var(--ink); }
+.scale .mark.guess { top: 48px; color: var(--bad); }
+.scale .mark.guess::before { content: ""; position: absolute; left: 50%; top: -12px; height: 12px; border-left: 2px dashed var(--bad); }
+.scale-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: -4px; }
+
+/* round summary */
+.summary { list-style: none; margin: 0; padding: 0; display: grid; }
+.summary li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.summary li:last-child { border-bottom: 0; }
+.summary .t { min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+/* flashcards */
+.fc { width: 100%; min-height: 300px; display: grid; justify-items: center; align-content: center; gap: 10px; text-align: center; padding: 26px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
+.fc .big { font: 700 clamp(26px, 5vw, 40px)/1.1 var(--f-display); text-wrap: balance; overflow-wrap: anywhere; }
+.fc .big.mono { font-family: var(--f-mono); font-weight: 600; font-size: clamp(34px, 7vw, 52px); }
+.fc .hint { font-size: 13px; color: var(--muted); }
+.fc .fc-mol { display: flex; justify-content: center; max-width: 100%; padding: 6px 0; }
+.fc .fc-note { font-size: 14px; color: var(--muted); max-width: 52ch; }
+.fc.flipped { background: var(--accent-soft); border-color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { .fc.anim { animation: flip .22s ease; } }
+@keyframes flip { from { transform: rotateX(70deg); opacity: .3; } to { transform: none; opacity: 1; } }
+.fc-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fc-count { font: 600 14px var(--f-mono); color: var(--muted); }
+
+/* cards view */
+.cards-head { display: grid; gap: 6px; }
+h2.sec { margin: 0; font: 700 24px/1.15 var(--f-display); }
+.src { margin: 0; font-size: 13.5px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+.tile { display: grid; grid-template-rows: 100px auto 1fr; gap: 6px; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; text-align: left; }
+.tile.nomol { grid-template-rows: auto 1fr; }
+.tile:hover { border-color: var(--accent); }
+.tile .thumb { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.tile .tname { font-weight: 600; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.tile .tmeta { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.tile .tmeta span:first-child { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+textarea { width: 100%; min-height: 260px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font: 400 13px/1.55 var(--f-mono); resize: vertical; }
+.msg { font-size: 14px; font-weight: 600; }
+.msg.good { color: var(--good); } .msg.bad { color: var(--bad); }
+.stack { display: grid; gap: 14px; min-width: 0; }
+.foot { max-width: 1160px; margin: -36px auto 0; padding: 0 16px 32px; font-size: 13px; color: var(--muted); text-align: center; text-wrap: balance; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* two tab groups, Practice and Review; on a phone they wrap, and each strip may scroll sideways
+   (min-width stops a strip from widening the page) */
+.modes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; min-width: 0; max-width: 100%; }
+.mode-group { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+.mode-h { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.top { min-width: 0; }
+.tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex: none; white-space: nowrap; }
+@media (max-width: 520px) { .tabs button { padding: 7px 10px; font-size: 13.5px; } }
+
+/* segmented control */
+.seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+.seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; font-weight: 600; font-size: 13.5px; color: var(--muted); cursor: pointer; font-variant-numeric: tabular-nums; }
+.seg button:hover:not([disabled]) { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / .12); }
+.seg button[disabled] { opacity: .4; cursor: not-allowed; }
+.seg-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.seg-row .lab { font-size: 13px; color: var(--muted); }
+
+/* rank */
+.rank-axis { display: grid; gap: 5px; }
+.rank-axis i { height: 4px; border-radius: 2px; background: linear-gradient(90deg, hsl(0 72% 52%), hsl(56 80% 50%), hsl(112 55% 44%), hsl(168 60% 40%), hsl(224 62% 54%), hsl(280 52% 54%)); }
+.rank-axis div { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--muted); }
+.rgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); grid-auto-rows: 1fr; gap: 10px; }
+.rtile { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 8px 10px 10px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); text-align: left; cursor: pointer; touch-action: manipulation; }
+.rgrid:not(.done) .rtile { cursor: grab; }
+.rgrid:not(.done) .rtile:hover { border-color: var(--accent); }
+.rtile .rtop { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.rnum { min-width: 24px; height: 24px; padding: 0 6px; display: grid; place-items: center; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); font: 600 12.5px var(--f-mono); color: var(--muted); }
+.grip { display: grid; place-items: center; padding: 8px 10px; margin: -8px -10px; color: var(--muted); touch-action: none; cursor: grab; }
+.rtile .thumb { height: 84px; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.rtile .tname { font-weight: 600; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.rtile .tsub { font: 400 12.5px/1.35 var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+.rtile .tmeta { margin-top: auto; padding-top: 4px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.rstat { font: 600 13px var(--f-mono); white-space: nowrap; }
+.rtile.ok { border-color: var(--good); }
+.rtile.ok .rstat, .rtile.ok .rnum { color: var(--good); }
+.rtile.bad { border-color: var(--bad); background: var(--bad-soft); }
+.rtile.bad .rstat, .rtile.bad .rnum { color: var(--bad); }
+.rtile.picked { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1.5px var(--accent); }
+.rtile.dragging { z-index: 5; cursor: grabbing; border-color: var(--accent); box-shadow: 0 12px 30px rgb(0 0 0 / .22); }
+.rgrid.live .rtile:not(.dragging) { transition: transform .18s ease; }
+body.rk-drag { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+
+/* count it: lettered ligands on the structure */
+.site-struct { padding: 20px 12px; }
+.smol .b, .smol .t, .smol .ring { pointer-events: none; }
+.smol .pick { cursor: pointer; }
+.smol .halo.best { fill: var(--good-soft); }
+.smol .halo.wrong { fill: var(--bad-soft); }
+.smol .badge { fill: var(--surface); stroke: var(--hl-ink); stroke-width: 1.4; }
+.smol .bl { font: 700 9.5px var(--f-mono); fill: var(--hl-ink); pointer-events: none; }
+.smol .bv { font: 600 8.5px var(--f-mono); fill: var(--muted); pointer-events: none; }
+.smol .pick:hover .badge { fill: var(--hl); }
+.smol .best .badge { fill: var(--good); stroke: var(--good); }
+.smol .wrong .badge { fill: var(--bad); stroke: var(--bad); }
+.smol .best .bl, .smol .wrong .bl { fill: var(--surface); }
+.smol .best .bv { fill: var(--good); } .smol .wrong .bv { fill: var(--bad); }
+.smol .other .badge { stroke: var(--muted); } .smol .other .bl { fill: var(--muted); }
+.opt .val .site-what { font-weight: 500; }
+.smol .ranked .badge { fill: var(--accent); stroke: var(--accent); }
+.smol .ranked .bl { fill: var(--accent-ink); }
+.smol .halo.ranked { fill: var(--accent-soft); }
+.smol .bv.rk { fill: var(--accent); font-size: 9.5px; }
+.opt.ranked { border-color: var(--accent); background: var(--accent-soft); }
+.opt .slot { margin-left: auto; padding-left: 8px; font: 600 13px var(--f-mono); color: var(--accent); white-space: nowrap; }
+.opt.correct .slot { color: var(--good); } .opt.wrong .slot { color: var(--bad); }
+.approx { font: 600 14px var(--f-mono); color: var(--muted); margin-right: 3px; }
+
+/* metals, thin hashes of dashed bonds */
+.mol .b.m { stroke: var(--m-m); } .mol .t.m { fill: var(--m-m); }
+.mol .h { fill: none; stroke-width: .8; stroke-linecap: round; }
+.mol .h.c { stroke: var(--m-c); } .mol .h.o { stroke: var(--m-o); } .mol .h.n { stroke: var(--m-n); }
+.mol .h.s { stroke: var(--m-s); } .mol .h.x { stroke: var(--m-x); } .mol .h.p { stroke: var(--m-p); } .mol .h.m { stroke: var(--m-m); }
+.pill.ion { background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.scale .tick.key { color: var(--ink); font-weight: 600; }
+
+/* tallies: how a count adds up, covalent and ionic side by side; the chosen method is outlined */
+.tally { display: grid; gap: 10px; }
+@media (min-width: 640px) { .tally { grid-template-columns: 1fr 1fr; } }
+.tbox { display: grid; gap: 3px; align-content: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); min-width: 0; }
+.tbox.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tbox h3 { margin: 0 0 4px; font: 600 11.5px var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.trow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; min-width: 0; }
+.trow span { min-width: 0; overflow-wrap: anywhere; }
+.trow b { font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums; }
+.trow.sum { border-top: 1px solid var(--line); padding-top: 4px; margin-top: 2px; font-weight: 600; }
+.cls { font: 600 11.5px var(--f-mono); color: var(--muted); margin-left: 4px; }
+.osline { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+/* sort: a tray of cards above the boxes; cards are dragged (or tapped, then a box tapped) into a box */
+.stray { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; min-height: 96px; padding: 10px; border: 1.5px dashed var(--line); border-radius: 12px; align-items: start; }
+.sbins { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 8px; }
+.sbin { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 150px; padding: 8px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--paper); transition: border-color .15s, background .15s; }
+.sbin h3 { margin: 0 0 2px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 700 15px var(--f-display); }
+.sbin h3 small { font: 400 12px var(--f-mono); color: var(--muted); }
+.bkey { width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 5px; font: 600 11px var(--f-mono); color: var(--muted); background: var(--surface); }
+.sort-picking .sbin, .sort-picking .stray { border-color: var(--accent); border-style: dashed; cursor: pointer; }
+.sbin.over, .stray.over { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+.scard { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 6px 8px 8px; text-align: left; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); cursor: grab; touch-action: manipulation; }
+.scard:hover { border-color: var(--accent); }
+.scard .grip { position: absolute; top: 2px; right: 2px; margin: 0; padding: 6px 7px; }
+.scard .thumb { height: 64px; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.scard .tname { font-weight: 600; font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; padding-right: 14px; }
+.scard .tsub { font: 400 11.5px/1.3 var(--f-mono); color: var(--muted); overflow-wrap: anywhere; }
+.scard .tmeta { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 2px; }
+.scard.picked { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1.5px var(--accent); }
+.scard.dragging { opacity: .35; }
+.scard.lift { position: fixed; z-index: 50; margin: 0; pointer-events: none; cursor: grabbing; border-color: var(--accent); box-shadow: 0 12px 30px rgb(0 0 0 / .22); }
+.scard.ok { border-color: var(--good); cursor: default; } .scard.ok .rstat { color: var(--good); }
+.scard.bad { border-color: var(--bad); background: var(--bad-soft); cursor: default; } .scard.bad .rstat { color: var(--bad); }
+
+/* count it: one row per ligand, then the metal, the charge and the total */
+.cgrid { display: grid; gap: 8px; }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.crow.sum { background: var(--accent-soft); }
+.crow.ok { border-color: var(--good); background: var(--good-soft); }
+.crow.bad { border-color: var(--bad); background: var(--bad-soft); }
+.clab { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; font-size: 14.5px; }
+.cask { color: var(--muted); font-size: 13.5px; }
+.chint { flex-basis: 100%; font-size: 12.5px; color: var(--muted); font-style: italic; }
+.cin { display: flex; align-items: center; gap: 8px; }
+.cin input { width: 76px; padding: 7px 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--paper); font: 600 17px var(--f-mono); text-align: center; }
+.cin input:focus { outline: none; border-color: var(--accent); }
+.fix { font: 600 13px var(--f-mono); color: var(--bad); white-space: nowrap; }
+.lbadge { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: 1.4px solid var(--hl-ink); color: var(--hl-ink); background: var(--surface); font: 700 11.5px var(--f-mono); }
+.bonus { border-top: 1px dashed var(--line); padding-top: 12px; }
+
+/* geometry questions: the electron facts in place of the structure */
+.givens { display: flex; flex-wrap: wrap; gap: 8px; }
+.givens span { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font-size: 14px; color: var(--muted); }
+.givens b { font: 600 18px var(--f-mono); color: var(--ink); margin-right: 4px; }
+
+/* periodic table: the d block, folded away on demand */
+.ptable { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+.ptable summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.ptable[open] summary { margin-bottom: 8px; }
+.ptable .help { font-size: 12.5px; margin-top: 6px; }
+.pt-wrap { overflow-x: auto; }
+.pt { border-collapse: separate; border-spacing: 3px; font-variant-numeric: tabular-nums; }
+.pt th { font: 600 11px var(--f-body); color: var(--muted); padding: 0 4px; white-space: nowrap; }
+.pt thead th { font: 600 12px var(--f-mono); color: var(--accent); }
+.pt thead th:first-child, .pt tbody th { text-align: right; font-weight: 500; }
+.pt td { min-width: 34px; padding: 4px 2px; text-align: center; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); font: 600 13.5px var(--f-mono); }
+.pt td.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+@media (max-width: 520px) { .pt { border-spacing: 2px; } .pt .pl { display: none; } .pt th { padding: 0 2px; } .pt td { min-width: 0; width: 26px; padding: 3px 0; font-size: 11.5px; } }
+
+/* My cards: a star on every card, and a box to drop a dragged card on */
+.mine { flex: none; border: 0; background: none; padding: 2px 4px; font-size: 19px; line-height: 1; color: var(--muted); cursor: pointer; }
+.mine:hover, .mine[aria-pressed="true"] { color: var(--accent); }
+.tile-w { position: relative; display: grid; min-width: 0; }
+.tile-w .mine { position: absolute; top: 5px; right: 5px; }
+.summary li { grid-template-columns: 1fr auto auto auto; }
+[draggable="true"] { -webkit-user-drag: element; }
+.set.drop { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent); }
+.mine-drop { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 30; max-width: calc(100vw - 32px); padding: 14px 22px; border: 2px dashed var(--accent); border-radius: 12px; background: var(--surface); color: var(--ink); font-weight: 600; text-align: center; box-shadow: 0 6px 24px rgb(0 0 0 / .18); }
+.mine-drop.drop { background: var(--accent-soft); }
+</style>
+
+<!--__LOGO_DEFS__-->
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <a class="logo-tile" href="https://github.com/ChemTrain" target="_blank" rel="noopener" title="ChemTrain on GitHub" aria-label="ChemTrain on GitHub"><!--__LOGO__--></a>
+      <h1>TMC <span>Learn</span></h1>
+    </div>
+    <nav class="modes" role="tablist" aria-label="Mode">
+      <div class="mode-group" role="none"><span class="mode-h" aria-hidden="true">Practice</span>
+        <div class="tabs" role="none">
+          <button id="tab-learn" role="tab" aria-selected="true" aria-controls="view-learn" data-view="learn">Learn</button>
+          <button id="tab-sort" role="tab" aria-selected="false" aria-controls="view-sort" data-view="sort">Sort</button>
+          <button id="tab-count" role="tab" aria-selected="false" aria-controls="view-count" data-view="count">Count it</button>
+          <button id="tab-name" role="tab" aria-selected="false" aria-controls="view-name" data-view="name">Name it</button>
+        </div>
+      </div>
+      <div class="mode-group" role="none"><span class="mode-h" aria-hidden="true">Review</span>
+        <div class="tabs" role="none">
+          <button id="tab-flashcards" role="tab" aria-selected="false" aria-controls="view-flashcards" data-view="flashcards">Flashcards</button>
+          <button id="tab-cards" role="tab" aria-selected="false" aria-controls="view-cards" data-view="cards">Cards</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <section class="optbar" aria-label="Options">
+    <div class="optrow">
+      <div class="field" data-for="learn sort count name">Difficulty
+        <div class="seg" role="group" aria-label="Difficulty"><button type="button" data-level="easy">Easy</button><button type="button" data-level="hard">Hard</button></div>
+      </div>
+      <div class="field" data-for="learn sort count flashcards cards">Counting
+        <div class="seg" role="group" aria-label="Counting method" data-opt="method"><button type="button" data-val="cov" title="Neutral ligands: L gives 2 electrons, X gives 1">Covalent</button><button type="button" data-val="ion" title="Ligands as closed-shell ions: Cl⁻ gives 2, Cp⁻ gives 6">Ionic</button></div>
+      </div>
+      <div class="field" data-for="learn">Ask for
+        <div class="seg" role="group" aria-label="Ask for" data-opt="ask"><button type="button" data-val="ve">Electron count</button><button type="button" data-val="os">Ox. state</button><button type="button" data-val="dn">dⁿ</button><button type="button" data-val="geo" title="Guess the shape from the electron count">Geometry</button><button type="button" data-val="mix" title="A mix of all four">Mixed</button></div>
+      </div>
+      <div class="field" data-for="learn">Questions
+        <div class="seg" role="group" aria-label="Questions" data-opt="qtype"><button type="button" data-val="mixed" title="Multiple choice until a card is familiar, then typed">Mixed</button><button type="button" data-val="mc">Choices</button><button type="button" data-val="written">Typed</button></div>
+      </div>
+      <div class="field" data-for="learn">Card order
+        <div class="seg" role="group" aria-label="Card order" data-opt="shuffle"><button type="button" data-val="true">Shuffled</button><button type="button" data-val="false">Set order</button></div>
+      </div>
+      <div class="field" data-for="sort count name flashcards cards">Cards
+        <div class="seg" role="group" aria-label="Which cards" data-opt="only"><button type="button" data-val="all">All</button><button type="button" data-val="todo" title="Leave out the cards you have mastered in Learn">Not mastered</button></div>
+      </div>
+    </div>
+    <div class="optfoot">
+      <p class="help">Both counting methods give the same total, oxidation state and dⁿ; they differ in what each ligand gives. Answer choices are at least 2 apart on Easy and next to each other on Hard; changing the level deals another card. Geometry hides the structure: guess the shape from the number of ligands and the electron count. In the Ligands set, the other choices ask for the L/X class. A card is mastered after two correct answers in a row; progress is saved in this browser. Not mastered leaves out the cards you have mastered in Learn (in Name it, the complexes you named right last time). Star a card ☆, or drag it onto My cards, to keep it in your own set.</p>
+      <div data-for="learn flashcards cards"><button class="btn ghost small" id="reset-progress" type="button">Reset progress for this set</button></div>
+    </div>
+  </section>
+  <div class="indicator" aria-hidden="true"></div>
+
+  <div class="app">
+    <aside class="side">
+      <section id="side-sets" aria-labelledby="sets-h">
+        <h2 class="side-h" id="sets-h">Sets</h2>
+        <div class="sets" id="sets"></div>
+      </section>
+      <section id="side-named" aria-labelledby="named-h" hidden>
+        <h2 class="side-h" id="named-h">Named complexes</h2>
+        <div class="stack">
+          <div class="sets" id="nm-lists"></div>
+          <p class="help">Complexes with a common name, from every set. On Hard the wrong answers come from the same family.</p>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <details class="ptable" id="ptable">
+        <summary>Periodic table, d block</summary>
+        <div class="pt-wrap"><table class="pt" id="pt-grid" aria-label="Transition metals by group"></table></div>
+        <p class="help">The group number is the electron count of the neutral metal (covalent count); dⁿ = group − oxidation state.</p>
+      </details>
+      <section id="view-learn" class="stack" role="tabpanel" aria-labelledby="tab-learn">
+        <div id="progress" class="progress"></div>
+        <div id="learn-box"></div>
+      </section>
+
+      <section id="view-sort" class="stack" role="tabpanel" aria-labelledby="tab-sort" hidden>
+        <div id="sort-box"></div>
+      </section>
+
+      <section id="view-count" class="stack" role="tabpanel" aria-labelledby="tab-count" hidden>
+        <div id="count-box"></div>
+      </section>
+
+      <section id="view-name" class="stack" role="tabpanel" aria-labelledby="tab-name" hidden>
+        <div id="name-box"></div>
+      </section>
+
+      <section id="view-flashcards" class="stack" role="tabpanel" aria-labelledby="tab-flashcards" hidden>
+        <button class="fc" id="fc-card" type="button"></button>
+        <div class="fc-nav">
+          <button class="btn ghost" id="fc-prev" type="button">← Previous</button>
+          <span class="fc-count" id="fc-count"></span>
+          <button class="btn ghost" id="fc-next" type="button">Next →</button>
+        </div>
+        <div class="row">
+          <button class="btn ghost small" id="fc-shuffle" type="button" aria-pressed="false">Shuffle</button>
+          <button class="btn ghost small" id="fc-mine" type="button" aria-pressed="false">☆ Add to My cards</button>
+          <span class="help">Space flips the card. The arrow keys move between cards.</span>
+        </div>
+      </section>
+
+      <section id="view-cards" class="stack" role="tabpanel" aria-labelledby="tab-cards" hidden>
+        <div class="cards-head" id="cards-head"></div>
+        <div id="copy-row" class="row">
+          <button class="btn ghost small" id="copy-set" type="button">Copy to My cards to edit</button>
+          <span class="help">Click a card to open it as a flashcard. Star it ☆, or drag it onto My cards, to add just that one.</span>
+        </div>
+        <div class="tiles" id="tiles"></div>
+        <div id="editor" class="stack" hidden>
+          <h2 class="sec">Edit your cards</h2>
+          <p class="help">One card per line: <code>name | formula | electron count | note</code>. Formula and note are optional, so <code>name | 18</code> works too. A ligand takes its L/X class: <code>carbonyl | CO | L</code>. To bring in a Quizlet set, choose <em>Export</em> on Quizlet, keep “Tab” between term and definition and “New line” between rows, and paste it here. Cards named like a built-in complex get its structure, and its oxidation state and tally when the count matches.</p>
+          <textarea id="set-editor" spellcheck="false" aria-label="My cards"></textarea>
+          <div class="row">
+            <button class="btn" id="set-save" type="button">Save cards</button>
+            <span class="msg" id="set-msg" role="status"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<footer class="foot">TMC Learn is made by <a class="foot-brand" href="https://github.com/ChemTrain" target="_blank" rel="noopener"><!--__LOGO__-->ChemTrain</a>.
+  Code under MIT; cards, questions and notes under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>, so please credit TMC Learn when you reuse them.
+  <a href="https://github.com/ChemTrain/tmc-learn" target="_blank" rel="noopener">Source and how to cite</a>.</footer>
+<div class="mine-drop" id="mine-drop" hidden>★ Drop here to add it to My cards</div>
+
+<script>window.TMC_DATA = /*__TMC_DATA__*/null;</script>
+<script>
+const DATA = window.TMC_DATA || { sets: [], mols: [], ligands: {} };
+const MOLS = DATA.mols, LIG = DATA.ligands;
+const ROUND_SIZE = 7;
+const LEVEL_NAMES = ['Not studied', 'Learning', 'Familiar', 'Mastered'];
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const norm = s => String(s).toLowerCase().replace(/[−–—]/g, '-').replace(/\s+/g, ' ').trim();
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const store = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- numbers, charges, classes ---------- */
+const MINUS = '−';
+const num = v => v < 0 ? MINUS + Math.abs(v) : String(v);
+const signed = v => v > 0 ? '+' + v : v < 0 ? MINUS + Math.abs(v) : '0';
+const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+const roman = v => v === 0 ? '0' : (v < 0 ? MINUS : '') + ROMAN[Math.abs(v)];
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹', SUB = '₀₁₂₃₄₅₆₇₈₉';
+const dTxt = n => 'd' + String(n).replace(/\d/g, x => SUP[x]);
+const clsTxt = s => String(s).replace(/\d/g, x => SUB[x]);
+const METHOD = { cov: 'covalent', ion: 'ionic' };
+const METHOD_TIP = { cov: 'Neutral-ligand (covalent, L/X) count', ion: 'Ionic count: ligands as closed-shell ions' };
+const methodBadge = (m, big) => `<span class="mb mb-${m}${big ? ' lg' : ''}" title="${METHOD_TIP[m]}">${METHOD[m]}</span>`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function romanValue(t) {
+  const map = { i: 1, v: 5, x: 10 };
+  let v = 0;
+  for (let i = 0; i < t.length; i++) {
+    const a = map[t[i]], b = map[t[i + 1]] || 0;
+    if (!a) return null;
+    v += a < b ? -a : a;
+  }
+  return ROMAN[v] && ROMAN[v].toLowerCase() === t ? v : null;
+}
+// "18", "18 e", "+2", "−1", "II", "(III)", "d6", "d⁶" -> integer, or null
+function parseNum(text, q) {
+  let t = String(text).trim().toLowerCase().replace(/[−–—]/g, '-').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, x => SUP.indexOf(x)).replace(/[\s()]/g, '');
+  if (q === 'dn') t = t.replace(/^d/, '');
+  t = t.replace(/(e-?|electrons?)$/, '');
+  if (/^[-+]?\d+$/.test(t)) return parseInt(t, 10);
+  const m = /^([-+]?)([ivx]+)$/.exec(t);
+  if (q === 'os' && m) { const v = romanValue(m[2]); if (v !== null) return m[1] === '-' ? -v : v; }
+  return null;
+}
+// "L2X", "LLX", "l₂x" -> [2, 1], or null
+function parseClass(text) {
+  const t = String(text).toUpperCase().replace(/[₀₁₂₃₄₅₆₇₈₉]/g, x => SUB.indexOf(x)).replace(/\s+/g, '');
+  if (!/^([LX]\d*)+$/.test(t)) return null;
+  let l = 0, x = 0;
+  for (const [, k, d] of t.matchAll(/([LX])(\d*)/g)) { const n = d ? +d : 1; if (k === 'L') l += n; else x += n; }
+  return [l, x];
+}
+const sameClass = (a, b) => { const p = parseClass(a), q = parseClass(b); return !!p && !!q && p[0] === q[0] && p[1] === q[1]; };
+const covOf = cls => { const [l, x] = parseClass(cls); return 2 * l + x; };
+
+// electron counts get a colour from the same scale as the bar under the header
+const LO = 8, HI = 22;
+const hueOf = v => Math.round(Math.max(0, Math.min(1, (v - LO) / (HI - LO))) * 280);
+const pct = v => (Math.max(LO, Math.min(HI, v)) - LO) / (HI - LO) * 100;
+const chipE = v => `<span class="chip" style="--h:${hueOf(v)}">${esc(num(v))} e</span>`;
+const chipPlain = t => `<span class="chip plain">${t}</span>`;
+
+/* ---------- molecules ---------- */
+// mol: [width, height, metal positions, ligand anchors, svg body]
+function molSVG(i, maxScale, maxH, maxW, ring) {
+  const m = MOLS[i];
+  if (!m) return '';
+  const [w, h, metals, , body] = m;
+  const s = Math.min(maxScale, maxH / h, maxW / w);
+  const halo = metals.map(([x, y]) => `<circle class="halo" cx="${x}" cy="${y}" r="10.5"/>` + (ring ? `<circle class="ring" cx="${x}" cy="${y}" r="10.5"/>` : '')).join('');
+  return `<svg class="mol" viewBox="0 0 ${w} ${h}" width="${Math.round(w * s)}" height="${Math.round(h * s)}" aria-hidden="true">${halo}${body}</svg>`;
+}
+const hasMol = c => c && c.mol != null && !!MOLS[c.mol];
+
+/* ---------- sets ---------- */
+const BUILTIN = DATA.sets.map(s => ({ ...s, cards: s.cards.map(c => ({ ...c, kind: s.kind, id: c.term + '|' + c.formula, lg: s.kind === 'ligand' ? LIG[c.key] : null })) }));
+const COMPLEXES = BUILTIN.filter(s => s.kind === 'complex').flatMap(s => s.cards);
+const BY_NAME = new Map();
+for (const c of COMPLEXES) for (const k of [c.term, c.formula]) if (k && !BY_NAME.has(norm(k))) BY_NAME.set(norm(k), c);
+const LIG_BY_NAME = new Map();
+for (const c of BUILTIN.filter(s => s.kind === 'ligand').flatMap(s => s.cards))
+  for (const k of [c.term, c.formula]) if (k && !LIG_BY_NAME.has(norm(k))) LIG_BY_NAME.set(norm(k), c);
+
+function parseCustom(text) {
+  const out = [], seen = new Set();
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const parts = (raw.includes('\t') ? raw.split('\t') : line.split('|')).map(s => s.trim());
+    let term, formula = '', ans, note = '';
+    if (parts.length === 2) [term, ans] = parts;
+    else if (parts.length >= 3) { [term, formula, ans] = parts; note = parts.slice(3).join(' | '); }
+    if (!term || ans === undefined) continue;
+    const ve = parseNum(ans, 've');
+    // a ligand named like a built-in one, with its L/X class for the answer
+    const lig = ve === null ? LIG_BY_NAME.get(norm(term)) || (formula ? LIG_BY_NAME.get(norm(formula)) : null) : null;
+    if (ve === null && !(lig && sameClass(ans, lig.lg.cls))) continue;
+    let id = term + '|' + formula;
+    while (seen.has(id)) id += "'";
+    seen.add(id);
+    if (lig) { out.push({ ...lig, id, term, formula: formula || lig.formula, note: note || lig.note, kind: 'ligand' }); continue; }
+    // a card named like a built-in complex borrows its structure, and its whole count when the totals agree
+    const twin = BY_NAME.get(norm(term)) || (formula ? BY_NAME.get(norm(formula)) : null);
+    if (twin && twin.ve === ve) out.push({ ...twin, id, term, formula: formula || twin.formula, note: note || twin.note, kind: 'complex' });
+    else out.push({ id, term, formula, ve, note, kind: 'custom', mol: twin ? twin.mol : null });
+  }
+  return out;
+}
+function serializeCards(cards) {
+  return cards.map(c => {
+    const ans = c.kind === 'ligand' ? c.lg.cls : c.ve;
+    if (c.note) return [c.term, c.formula, ans, c.note].join(' | ');
+    return c.formula ? [c.term, c.formula, ans].join(' | ') : [c.term, ans].join(' | ');
+  }).join('\n');
+}
+
+let customText = store.get('tmc1.custom') || '';
+const CUSTOM = { id: 'custom', name: 'My cards', kind: 'custom', desc: 'Your own complexes and their electron counts, the cards you starred, or a set exported from Quizlet.', source: null, cards: parseCustom(customText) };
+const SETS = [...BUILTIN, CUSTOM];
+
+/* ---------- my cards: star a card anywhere, or drag it onto My cards ---------- */
+// cards on screen are named by a short key, so the page never shows a hidden answer in an attribute
+const REF = new Map(), REF_KEY = new WeakMap();
+function refKey(c) {
+  if (!REF_KEY.has(c)) { const k = 'c' + REF.size; REF.set(k, c); REF_KEY.set(c, k); }
+  return REF_KEY.get(c);
+}
+const mineTerms = () => new Set(CUSTOM.cards.map(c => norm(c.term)));
+const inMine = c => mineTerms().has(norm(c.term));
+const mineTitle = on => on ? 'In My cards. Click to take it out' : 'Add to My cards';
+function star(c) {
+  const on = inMine(c);
+  return `<button type="button" class="mine" data-mine="${refKey(c)}" aria-pressed="${on}" title="${mineTitle(on)}" aria-label="${mineTitle(on)}">${on ? '★' : '☆'}</button>`;
+}
+function syncMine() {
+  const terms = mineTerms();
+  for (const b of document.querySelectorAll('[data-mine]')) {
+    const c = REF.get(b.dataset.mine), on = !!c && terms.has(norm(c.term));
+    b.setAttribute('aria-pressed', String(on)); b.title = mineTitle(on);
+    if (b.classList.contains('mine')) { b.textContent = on ? '★' : '☆'; b.setAttribute('aria-label', mineTitle(on)); }
+    else b.textContent = on ? '★ In My cards' : '☆ Add to My cards';
+  }
+}
+const withLine = (text, add) => text.trim() ? text.replace(/\s*$/, '\n') + add : add;
+// adds the cards not yet in My cards; returns how many
+function addMine(cards) {
+  const terms = mineTerms(), add = [];
+  for (const c of cards) if (!terms.has(norm(c.term))) { terms.add(norm(c.term)); add.push(c); }
+  if (add.length) saveCustom(withLine(customText, serializeCards(add)), true);
+  return add.length;
+}
+function toggleMine(c) {
+  if (!inMine(c)) return addMine([c]);
+  const t = norm(c.term);
+  saveCustom(customText.split(/\r?\n/).filter(l => { const p = parseCustom(l); return !p.length || norm(p[0].term) !== t; }).join('\n'), true);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-mine]'), c = b && REF.get(b.dataset.mine);
+  if (c) toggleMine(c);
+});
+// "Add the 3 you missed to My cards" at the end of a round
+function addMissedBtn(where, cards) {
+  const left = cards.filter(c => !inMine(c)).length;
+  return left ? `<button type="button" class="btn ghost" data-add-missed="${where}">Add ${left === cards.length ? `the ${left}` : `${left} more`} you missed to My cards</button>` : '';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-add-missed]');
+  if (!b) return;
+  const n = addMine(missedCards(b.dataset.addMissed));
+  b.outerHTML = `<span class="help">${n ? `Added ${plural(n, 'card')} to My cards.` : 'Already in My cards.'}</span>`;
+});
+
+// Dragging a card (a tile, a flashcard or the head of a question) onto My cards adds it
+let dragCard = null;
+const mineZone = el => el && el.closest ? el.closest('#mine-drop, #sets [data-set="custom"]') : null;
+function endDrag() {
+  dragCard = null; $('#mine-drop').hidden = true;
+  for (const z of document.querySelectorAll('.drop')) z.classList.remove('drop');
+}
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest && e.target.closest('[data-drag]'), c = el && REF.get(el.dataset.drag);
+  if (!c) return;
+  dragCard = c;
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', c.term);
+  const z = $('#mine-drop');
+  z.textContent = inMine(c) ? '★ Already in My cards' : '★ Drop here to add it to My cards';
+  z.hidden = false;
+});
+document.addEventListener('dragover', e => {
+  const z = dragCard && mineZone(e.target);
+  if (!z) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  z.classList.add('drop');
+});
+document.addEventListener('dragleave', e => { const z = mineZone(e.target); if (z && !z.contains(e.relatedTarget)) z.classList.remove('drop'); });
+document.addEventListener('drop', e => {
+  const z = dragCard && mineZone(e.target);
+  if (!z) return;
+  e.preventDefault();
+  addMine([dragCard]);
+  endDrag();
+});
+document.addEventListener('dragend', endDrag);
+
+// Not mastered: leave out the cards mastered in Learn
+const notMastered = cards => settings.only === 'todo' ? cards.filter(c => lvl(c.id) < 3) : cards;
+
+/* ---------- state ---------- */
+const settings = Object.assign({ qtype: 'mixed', ask: 've', method: 'cov', shuffle: true, level: 'easy', only: 'all' }, store.get('tmc1.settings') || {});
+let active = null, levels = {}, roundNo = 1;
+let order = [], round = null, cur = null, phase = 'question', view = 'learn';
+const lvl = id => levels[id] || 0;
+const loadLevels = id => store.get('tmc1.levels.' + id) || {};
+const saveSettings = () => store.set('tmc1.settings', settings);
+function saveLevels() { store.set('tmc1.levels.' + active.id, levels); renderSets(); }
+function saveRound() { store.set('tmc1.round.' + active.id, roundNo); }
+function makeOrder() { order = settings.shuffle ? shuffle(active.cards) : active.cards.slice(); }
+
+function selectSet(id) {
+  active = SETS.find(s => s.id === id) || SETS[0];
+  store.set('tmc1.active', active.id);
+  levels = loadLevels(active.id);
+  roundNo = store.get('tmc1.round.' + active.id) || 1;
+  makeOrder(); fcInit(); startRound(); soDeal(); ctDeal();
+  renderSets(); renderCards(); renderFC(false);
+}
+
+function renderSets() {
+  $('#sets').innerHTML = SETS.map(s => {
+    const lv = s === active ? levels : loadLevels(s.id);
+    const n = s.cards.length;
+    const m = s.cards.filter(c => (lv[c.id] || 0) === 3).length;
+    const share = n ? m / n * 100 : 0;
+    const what = s.kind === 'ligand' ? 'ligand' : 'card';
+    return `<button type="button" class="set" data-set="${s.id}" aria-pressed="${s === active}">
+        <span class="nm">${esc(s.name)}</span>
+        <span class="meta"><span>${plural(n, what)}</span><span>${Math.round(share)}% mastered</span></span>
+        <span class="mini"><i style="width:${share}%"></i></span>
+      </button>`;
+  }).join('');
+}
+$('#sets').addEventListener('click', e => {
+  const b = e.target.closest('[data-set]');
+  if (b && b.dataset.set !== active.id) selectSet(b.dataset.set);
+});
+
+/* ---------- difficulty ---------- */
+// answer choices are at least this far apart (and from the answer)
+const LEVEL_GAP = { easy: 2, hard: 1 };
+const levelGap = () => LEVEL_GAP[settings.level] || LEVEL_GAP.hard;
+// A new level deals another card in every mode, so the choices of Easy and Hard can't be compared
+function setLevel(level) {
+  if (level === settings.level) return;
+  settings.level = level; saveSettings(); syncLevel();
+  relevelQuestion(); soDeal(); ctRelevel(); nmRelevel();
+}
+function syncLevel() {
+  for (const b of document.querySelectorAll('.seg [data-level]')) b.setAttribute('aria-pressed', String(b.dataset.level === settings.level));
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-level]'); if (b) setLevel(b.dataset.level); });
+
+/* ---------- learn ---------- */
+function startRound() {
+  if (!active.cards.length) { phase = 'empty'; round = null; cur = null; renderLearn(); return; }
+  if (!active.cards.some(askable)) { phase = 'nogeo'; round = null; cur = null; renderLearn(); return; }
+  const pending = order.filter(c => lvl(c.id) < 3 && askable(c));
+  if (!pending.length) { phase = 'done'; round = null; renderLearn(); return; }
+  const pick = pending.slice(0, ROUND_SIZE);
+  round = { queue: settings.shuffle ? shuffle(pick) : pick, i: 0, results: [] };
+  buildQuestion(round.queue[0]);
+}
+
+/* ---------- geometry ---------- */
+const SHAPES = { lin: 'Linear', trig: 'Trigonal planar', tet: 'Tetrahedral', sqpl: 'Square planar', tbp: 'Trigonal bipyramidal',
+  sqpy: 'Square pyramidal', oct: 'Octahedral', tprism: 'Trigonal prismatic' };
+const SITES = { lin: 2, trig: 3, tet: 4, sqpl: 4, tbp: 5, sqpy: 5, oct: 6, tprism: 6 };
+const ML = n => 'ML' + String(n).replace(/\d/g, x => SUB[x]);
+// the rule of thumb behind a shape, worded for this complex
+function shapeRule(c) {
+  const g = `${ML(SITES[c.shape])}, ${c.ve} e, ${dTxt(c.dn)}`;
+  switch (c.shape) {
+    case 'lin': return `${g}: two ligands on a d¹⁰ metal sit opposite each other, linear.`;
+    case 'trig': return `${g}: three ligands on a d¹⁰ metal spread out in a plane, trigonal planar.`;
+    case 'tet': return c.dn === 0 || c.dn === 10
+      ? `${g}: with d⁰ or d¹⁰ nothing favours a plane, so four ligands spread out, tetrahedral.`
+      : `${g}: a first-row metal with weak-field ligands stays high spin and tetrahedral; only strong-field ligands push d⁸ to square planar.`;
+    case 'sqpl': return c.dn === 8
+      ? `${g}: four ligands on a d⁸ metal with 16 electrons go square planar, leaving the empty d(x²−y²) orbital pointing at the ligands.`
+      : `${g}: square planar.`;
+    case 'tbp': return `${g}: five ligands around an 18-electron d⁸ metal, trigonal bipyramidal.`;
+    case 'sqpy': return `${g}: five ligands and an empty sixth site, square pyramidal, an octahedron with one ligand missing.`;
+    case 'oct': return `${g}: six ligands go octahedral, whatever the electron count.`;
+    case 'tprism': return `${g}: six ligands, but d⁰ with only σ-donors: a trigonal prism.`;
+  }
+  return '';
+}
+function geoOptions(ans) {
+  const d = s => Math.abs(SITES[s] - SITES[ans]);
+  const others = Object.keys(SHAPES).filter(s => s !== ans && s !== 'tprism');
+  // Hard: the look-alike with the same number of ligands comes first; Easy: shapes with other numbers of ligands
+  const pool = settings.level === 'hard' ? shuffle(others).sort((a, b) => d(a) - d(b)) : shuffle(others.filter(s => d(s) > 0));
+  return shuffle([ans, ...pool.slice(0, 3)]);
+}
+
+// What a question asks: ve electron count, os oxidation state, dn d-electrons, geo the shape,
+// le electrons a ligand gives (by the chosen method), cls a ligand's L/X class.
+function pickQ(c) {
+  const a = settings.ask;
+  if (c.kind === 'ligand') return a === 've' ? 'le' : a === 'mix' ? (Math.random() < 0.5 ? 'le' : 'cls') : 'cls';
+  if (c.kind === 'custom') return 've';
+  if (a === 'mix') { const qs = [...(c.noOs ? ['ve'] : ['ve', 've', 'os', 'dn']), ...(c.shape ? ['geo'] : [])]; return qs[Math.random() * qs.length | 0]; }
+  if (a === 'geo') return c.shape ? 'geo' : 've';
+  return c.noOs ? 've' : a;
+}
+// Geometry rounds only deal complexes that have a simple shape to guess
+const askable = c => settings.ask !== 'geo' || c.kind === 'ligand' || (c.kind === 'complex' && !!c.shape);
+const ligE = lg => settings.method === 'ion' ? lg.ion : lg.cov;
+const answerOf = (c, q) => q === 've' ? c.ve : q === 'os' ? c.os : q === 'dn' ? c.dn : q === 'geo' ? c.shape : q === 'le' ? ligE(c.lg) : c.lg.cls;
+const optText = (q, v) => q === 'os' ? signed(v) : q === 'dn' ? dTxt(v) : q === 'cls' ? clsTxt(v) : q === 'geo' ? SHAPES[v] : num(v);
+
+const RANGE = { ve: [8, 22], os: [-2, 8], dn: [0, 10], le: [1, 8] };
+function numericOptions(q, ans) {
+  const gap = levelGap();
+  let [lo, hi] = RANGE[q];
+  lo = Math.min(lo, ans - 3); hi = Math.max(hi, ans + 3);
+  if (q === 'dn') lo = Math.max(lo, 0);
+  if (q === 'le') lo = Math.max(lo, 1);
+  const cand = [];
+  for (let v = lo; v <= hi; v++) if (Math.abs(v - ans) >= gap) cand.push(v);
+  // Hard: the neighbours of the answer; Easy: any values, spread out
+  const pool = settings.level === 'hard' ? shuffle(cand).sort((a, b) => Math.abs(a - ans) - Math.abs(b - ans)) : shuffle(cand);
+  const pick = [];
+  for (const v of pool) if (pick.length < 3 && pick.every(p => Math.abs(p - v) >= gap)) pick.push(v);
+  return shuffle([ans, ...pick]);
+}
+const CLASSES = ['L', 'X', 'L2', 'LX', 'X2', 'L3', 'L2X', 'LX2', 'X3', 'L2X2'];
+function classOptions(ans) {
+  const others = CLASSES.filter(c => !sameClass(c, ans));
+  const d = c => Math.abs(covOf(c) - covOf(ans));
+  const pool = settings.level === 'hard' ? shuffle(others).sort((a, b) => d(a) - d(b)) : shuffle(others);
+  return shuffle([ans, ...pool.slice(0, 3)]);
+}
+
+// memo keeps the choices dealt for this card, so switching an option back and forth shows the same ones again
+function buildQuestion(card, memo = {}, keepQ = null) {
+  const q = keepQ && (keepQ === 'le' || keepQ === 'cls') === (card.kind === 'ligand') ? keepQ : pickQ(card), ans = answerOf(card, q);
+  let type;
+  if (settings.qtype === 'mc' || q === 'geo') type = 'mc';
+  else if (settings.qtype === 'written') type = 'written';
+  else type = lvl(card.id) >= 2 ? 'written' : 'mc';
+  const key = `${q}|${ans}|${settings.level}`;
+  if (type === 'mc' && !memo[key]) memo[key] = q === 'cls' ? classOptions(ans) : q === 'geo' ? geoOptions(ans) : numericOptions(q, ans);
+  cur = { card, q, ans, method: settings.method, type, options: type === 'mc' ? memo[key] : null, memo, answered: false, result: null };
+  phase = 'question';
+  renderLearn();
+}
+// on a new level: swap the card on screen for one not yet in this round, or else the next one in the round;
+// a card swapped out stays out of the round, so switching back can't bring its choices up again
+function relevelQuestion() {
+  if (phase !== 'question' || !cur || cur.answered) return;
+  const out = round.out || (round.out = new Set());
+  out.add(cur.card);
+  const spare = order.find(c => lvl(c.id) < 3 && askable(c) && !round.queue.includes(c) && !out.has(c));
+  if (spare) round.queue[round.i] = spare;
+  else if (round.queue.length - round.i > 1) round.queue.splice(round.i, 1);
+  buildQuestion(round.queue[round.i]);
+}
+
+function grade(text) {
+  if (cur.q === 'cls') { const g = parseClass(text); return { ok: !!g && sameClass(text, cur.ans), shown: g ? clsTxt(text.toUpperCase()) : text }; }
+  const g = parseNum(text, cur.q);
+  return { ok: g === cur.ans, shown: g === null ? text : optText(cur.q, g), num: g };
+}
+
+function focusContinue() { const b = $('#continue'); if (b) b.focus({ preventScroll: true }); }
+function resolve(ok, info) {
+  const c = cur.card, before = lvl(c.id);
+  const after = ok ? (before >= 2 ? 3 : 2) : 1;
+  levels[c.id] = after; saveLevels();
+  cur.answered = true;
+  cur.result = Object.assign({ card: c, ok, before, after }, info);
+  round.results.push(cur.result);
+  renderLearn(); focusContinue();
+}
+function choose(i) {
+  if (!cur || cur.answered || cur.type !== 'mc' || cur.options[i] === undefined) return;
+  const v = cur.options[i];
+  resolve(cur.q === 'cls' ? sameClass(v, cur.ans) : v === cur.ans, { chosen: i, shown: optText(cur.q, v), num: cur.q === 'cls' ? null : v });
+}
+function submitWritten(dontKnow) {
+  if (!cur || cur.answered) return;
+  const input = $('#answer-input');
+  const val = input ? input.value : '';
+  if (dontKnow) return resolve(false, { dontKnow: true });
+  if (!val.trim()) { if (input) input.focus(); return; }
+  const g = grade(val.trim());
+  resolve(g.ok, { shown: g.shown, num: g.num });
+}
+function override() {
+  const r = cur && cur.result;
+  if (!r || r.ok) return;
+  r.ok = true; r.overridden = true; r.after = r.before >= 2 ? 3 : 2;
+  levels[r.card.id] = r.after; saveLevels();
+  renderLearn(); focusContinue();
+}
+function advance() {
+  round.i++;
+  if (round.i < round.queue.length) return buildQuestion(round.queue[round.i]);
+  phase = 'summary'; renderLearn();
+  const b = $('#next-round'); if (b) b.focus({ preventScroll: true });
+}
+
+// the electron-count bar: 8 to 22 electrons, with 16 and 18 marked
+function scaleHTML(a, g) {
+  let ticks = '';
+  for (let v = LO; v <= HI; v += 2) ticks += `<span class="tick${v === 18 || v === 16 ? ' key' : ''}" style="left:${pct(v)}%">${v}</span>`;
+  const place = p => Math.max(4, Math.min(96, p));
+  let marks = `<span class="mark ans" style="left:${place(pct(a))}%">${esc(num(a))} e</span>`;
+  if (g !== null && g !== undefined && g !== a) marks += `<span class="mark guess" style="left:${place(pct(g))}%">you: ${esc(num(g))}</span>`;
+  return `<div><div class="scale" aria-hidden="true"><div class="track"></div>${marks}${ticks}</div>
+    <div class="scale-ends"><span>← fewer electrons</span><span>more electrons →</span></div></div>`;
+}
+
+function progressHTML() {
+  const counts = [0, 0, 0, 0];
+  active.cards.forEach(c => counts[lvl(c.id)]++);
+  const n = active.cards.length || 1;
+  const seg = [3, 2, 1].map(l => `<i class="l${l}" style="width:${counts[l] / n * 100}%"></i>`).join('');
+  const legend = [0, 1, 2, 3].map(l => `<span><i class="dot l${l}"></i>${LEVEL_NAMES[l]} <b>${counts[l]}</b></span>`).join('');
+  return `<div class="bar" role="img" aria-label="${counts[3]} of ${active.cards.length} mastered">${seg}</div><div class="legend">${legend}</div>`;
+}
+
+const perMetal = c => c.n > 1 ? ' (per metal)' : '';
+function askText(c, q, verb) {
+  if (q === 've') return `${verb} the valence electron count of ${c.metal ? esc(c.metal) : 'the metal'}${c.n > 1 ? ', per metal' : ''}.`;
+  if (q === 'os') return `${verb} the oxidation state of ${esc(c.metal)}${perMetal(c)}.`;
+  if (q === 'dn') return `${verb} the d-electron count (dⁿ) of ${esc(c.metal)}${perMetal(c)}.`;
+  if (q === 'geo') return `${verb} the geometry of ${esc(c.metal)}.`;
+  if (q === 'le') return `${verb} how many electrons this ligand gives in the ${methodBadge(cur.method, true)} count.`;
+  return `${verb} its class in the L/X (covalent bond) classification.`;
+}
+const PLACEHOLDER = { ve: 'e.g. 18', os: 'e.g. +2 or II', dn: 'e.g. d6', le: 'e.g. 2', cls: 'e.g. L2X' };
+
+function questionHTML() {
+  const c = cur.card, r = cur.result;
+  const shown = r ? r.before : lvl(c.id);
+  const tags = `<div class="tags">${c.charge ? `<span class="pill ion">${c.charge > 0 ? 'cation' : 'anion'}</span>` : ''}<span class="pill" data-l="${shown}">${LEVEL_NAMES[shown]}</span>${star(c)}</div>`;
+  const head = `<div class="qhead"><div class="qtop"><p class="eyebrow">${c.kind === 'ligand' ? 'Ligand' : 'Complex'}</p>${tags}</div>
+      <div class="qmain" draggable="true" data-drag="${refKey(c)}">
+        <div class="qtext"><h2 class="term">${esc(c.term)}</h2>${c.formula ? `<p class="formula">${esc(c.formula)}</p>` : ''}</div>
+        ${cur.q === 'geo' ? `<div class="givens"><span><b>${SITES[c.shape]}</b> ligand sites</span><span><b>${c.ve}</b> electrons</span><span><b>${dTxt(c.dn)}</b> ${esc(c.metal)}(${roman(c.os)})</span></div>`
+          : hasMol(c) ? `<figure class="struct">${molSVG(c.mol, 2.4, 250, 680, !cur.answered)}</figure>` : ''}
+      </div>
+      <p class="ask">${askText(c, cur.q, cur.type === 'mc' ? 'Choose' : 'Type')}</p></div>`;
+  let body = '';
+  if (cur.type === 'mc') {
+    body = '<div class="options">' + cur.options.map((o, i) => {
+      let cls = 'opt';
+      const right = cur.q === 'cls' ? sameClass(o, cur.ans) : o === cur.ans;
+      if (cur.answered) cls += right ? ' correct' : r.chosen === i ? ' wrong' : ' dim';
+      return `<button type="button" class="${cls}" data-i="${i}" ${cur.answered ? 'disabled' : ''}><span class="key">${i + 1}</span><span class="val${cur.q === 'geo' ? '' : ' num'}">${esc(optText(cur.q, o))}</span></button>`;
+    }).join('') + '</div>';
+  } else if (!cur.answered) {
+    body = `<form class="written" id="written" autocomplete="off">
+        <input id="answer-input" type="text" inputmode="text" placeholder="${PLACEHOLDER[cur.q]}" aria-label="Answer">
+        <button class="btn" type="submit">Answer</button>
+      </form>
+      <div><button type="button" class="linkbtn" id="dont-know">Don't know?</button></div>`;
+  }
+  return `<div class="panel">${head}${body}${cur.answered ? feedbackHTML() : ''}</div>`;
+}
+
+/* ---------- tallies: how a count adds up, by both methods ---------- */
+function covRows(c) {
+  const rows = [[`${c.n > 1 ? c.n + ' × ' : ''}${esc(c.metal)}, group ${c.group}`, c.n * c.group]];
+  for (const [k, n] of c.lig) {
+    const L = LIG[k];
+    rows.push([`${n > 1 ? n + ' × ' : ''}${esc(L.show)} <span class="cls">${clsTxt(L.cls)}</span>`, n * L.cov]);
+  }
+  if (c.charge) rows.push([`charge ${signed(c.charge)}`, -c.charge]);
+  return rows;
+}
+function ionRows(c) {
+  const rows = [[`${c.n > 1 ? c.n + ' × ' : ''}${esc(c.metal)}(${roman(c.os)}), ${dTxt(c.dn)}`, c.n * c.dn]];
+  for (const [k, n] of c.lig) {
+    const L = LIG[k];
+    rows.push([`${n > 1 ? n + ' × ' : ''}${esc(L.ionName || L.show)}`, n * L.ion]);
+  }
+  return rows;
+}
+function tallyBox(c, m) {
+  const rows = m === 'cov' ? covRows(c) : ionRows(c);
+  if (c.mm) rows.push([`${plural(c.mm, 'M–M bond')}, 1 e to each metal`, 2 * c.mm]);
+  const total = rows.reduce((a, r) => a + r[1], 0);
+  let html = rows.map(([t, v]) => `<div class="trow"><span>${t}</span><b>${num(v)}</b></div>`).join('');
+  html += `<div class="trow sum"><span>Total</span><b>${num(total)}</b></div>`;
+  if (c.n > 1) html += `<div class="trow sum"><span>Per metal, ÷ ${c.n}</span><b>${num(c.ve)}</b></div>`;
+  return `<div class="tbox${m === settings.method ? ' on' : ''}"><h3>${m === 'cov' ? 'Covalent (neutral ligands)' : 'Ionic'}</h3>${html}</div>`;
+}
+function osLine(c) {
+  if (c.noOs) return `<p class="osline">${esc(c.note || '')}</p>`;
+  const q = c.lig.reduce((a, [k, n]) => a + n * LIG[k].q, 0);
+  const each = c.n > 1 ? `, shared by ${c.n} metals` : '';
+  return `<p class="osline">Oxidation state: the complex has charge ${signed(c.charge)} and the ligands, as ions, carry ${signed(q)}, so ${esc(c.metal)} carries ${signed(c.charge - q)}${each}: ${esc(c.metal)}(${roman(c.os)}), group ${c.group} − ${num(c.os)} = ${dTxt(c.dn)}.</p>`;
+}
+function tallyHTML(c) {
+  if (c.kind !== 'complex') return '';
+  const order = settings.method === 'cov' ? ['cov', 'ion'] : ['ion', 'cov'];
+  return `<div class="tally">${order.map(m => tallyBox(c, m)).join('')}</div>${osLine(c)}`;
+}
+function ligandInfo(lg) {
+  const same = lg.cov === lg.ion && lg.q === 0;
+  const ion = same ? `the same ${lg.cov} e in the ionic count` : `${lg.ion} e in the ionic count, as ${esc(lg.ionName || lg.show)} (charge ${signed(lg.q)})`;
+  return `<p class="fbline"><strong>${esc(lg.show)}</strong> is ${/^[aeiou]/i.test(lg.cls) ? 'an' : 'a'} <strong>${clsTxt(lg.cls)}</strong> ligand: ${lg.cov} e as a neutral ligand, ${ion}.${lg.mu ? ' It bridges two metals; the electrons are shared between them.' : ''}</p>`;
+}
+
+function feedbackHTML() {
+  const r = cur.result, c = r.card, q = cur.q;
+  let verdict, cls;
+  if (r.ok) { cls = 'good'; verdict = r.overridden ? 'Counted as correct' : 'Correct'; }
+  else { cls = 'bad'; verdict = r.dontKnow ? 'Here is the answer' : 'Not quite'; }
+  let lines = '';
+  if (!r.ok && r.shown !== undefined) lines += `<p class="fbline">You answered <strong>${esc(r.shown)}</strong>.</p>`;
+  if (c.kind === 'ligand') lines += ligandInfo(c.lg);
+  else if (q === 'geo') {
+    lines += `<p class="fbline">${esc(c.term)} (${esc(c.formula)}) is <strong>${SHAPES[c.shape].toLowerCase()}</strong>.</p><p class="fbline">${shapeRule(c)}</p>`;
+    if (hasMol(c)) lines += `<figure class="struct">${molSVG(c.mol, 2.2, 230, 680)}</figure>`;
+  } else {
+    const what = q === 'os' ? `${esc(c.metal)}(${roman(c.os)}), oxidation state <strong>${signed(c.os)}</strong>`
+      : q === 'dn' ? `${esc(c.metal)}(${roman(c.os)}) is <strong>${dTxt(c.dn)}</strong>`
+      : `<strong>${num(c.ve)} electrons</strong>${perMetal(c)}`;
+    lines += `<p class="fbline">${esc(c.term)}${c.formula ? ` (${esc(c.formula)})` : ''}: ${what}.</p>`;
+    lines += tallyHTML(c);
+  }
+  if (r.after !== r.before) lines += `<p class="fbline">Now <span class="pill" data-l="${r.after}">${LEVEL_NAMES[r.after]}</span></p>`;
+  if (c.note && !(c.noOs && c.kind === 'complex' && q !== 'geo')) lines += `<p class="note">${esc(c.note)}</p>`;
+  const scale = q === 've' ? scaleHTML(c.ve, r.ok ? null : r.num) : '';
+  const overrideBtn = cur.type === 'written' && !r.ok && !r.dontKnow
+    ? `<button type="button" class="btn ghost" id="override">I was right, count it</button>` : '';
+  return `<div class="feedback" aria-live="polite">
+      <p class="verdict ${cls}">${verdict}</p>${lines}${scale}
+      <div class="row end">${overrideBtn}<button type="button" class="btn" id="continue">Continue</button></div>
+    </div>`;
+}
+
+const cardChip = c => c.kind === 'ligand' ? chipPlain(`${clsTxt(c.lg.cls)} · ${ligE(c.lg)} e`) : chipE(c.ve);
+function summaryHTML() {
+  const res = round.results, okN = res.filter(r => r.ok).length;
+  const mastered = active.cards.filter(c => lvl(c.id) === 3).length;
+  const rows = res.map(r => `<li><span class="t">${esc(r.card.term)}</span>${cardChip(r.card)}
+      <span class="pill" data-l="${r.after}">${LEVEL_NAMES[r.after]}</span>${star(r.card)}</li>`).join('');
+  return `<div class="panel">
+      <div class="qhead"><p class="eyebrow">Round ${roundNo} done</p>
+      <h2 class="term">${okN} of ${res.length} correct</h2>
+      <p class="ask">${mastered} of ${active.cards.length} cards mastered so far.</p></div>
+      <ul class="summary">${rows}</ul>
+      <div class="row end">${addMissedBtn('learn', missedCards('learn'))}<button type="button" class="btn" id="next-round">Next round</button></div>
+    </div>`;
+}
+function doneHTML() {
+  return `<div class="panel">
+      <div class="qhead"><p class="eyebrow">Set complete</p>
+      <h2 class="term">All ${active.cards.length} cards mastered</h2>
+      <p class="ask">It took ${plural(roundNo, 'round')}. Study again to reset this set and start over, or pick another set.</p></div>
+      <div class="row end"><button type="button" class="btn" id="study-again">Study again</button></div>
+    </div>`;
+}
+function emptyHTML() {
+  return `<div class="panel">
+      <div class="qhead"><p class="eyebrow">${esc(active.name)}</p>
+      <h2 class="term">No cards yet</h2>
+      <p class="ask">Write your own cards or paste a Quizlet export, or copy a built-in set and edit it.</p></div>
+      <div class="row end"><button type="button" class="btn" data-goto="cards">Add cards</button></div>
+    </div>`;
+}
+function noGeoHTML() {
+  return `<div class="panel"><div class="qhead"><p class="eyebrow">${esc(active.name)}</p>
+      <h2 class="term">No shapes to guess here</h2>
+      <p class="ask">Geometry questions use complexes with one metal and no Cp or arene rings, and this set has none. Pick another set, or ask for something else.</p></div></div>`;
+}
+function renderLearn() {
+  $('#progress').innerHTML = phase === 'empty' || phase === 'nogeo' ? '' : progressHTML();
+  const el = $('#learn-box');
+  el.innerHTML = phase === 'empty' ? emptyHTML() : phase === 'nogeo' ? noGeoHTML() : phase === 'done' ? doneHTML() : phase === 'summary' ? summaryHTML() : questionHTML();
+  ptMark(phase === 'question' && cur && cur.card.metal, 'learn');
+  if (phase === 'question' && !cur.answered && cur.type === 'written' && view === 'learn') {
+    const inp = $('#answer-input'); if (inp) inp.focus({ preventScroll: true });
+  }
+}
+$('#learn-box').addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  if (t.dataset.i !== undefined) choose(+t.dataset.i);
+  else if (t.id === 'continue') advance();
+  else if (t.id === 'dont-know') submitWritten(true);
+  else if (t.id === 'override') override();
+  else if (t.id === 'next-round') { roundNo++; saveRound(); startRound(); }
+  else if (t.id === 'study-again') { levels = {}; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); }
+  else if (t.dataset.goto) show(t.dataset.goto);
+});
+$('#learn-box').addEventListener('submit', e => { e.preventDefault(); submitWritten(false); });
+
+/* options: each [data-opt] button group sets one setting */
+const OPT_VALUE = { qtype: v => v, ask: v => v, method: v => v, shuffle: v => v === 'true', only: v => v };
+function syncOptions() {
+  for (const g of document.querySelectorAll('.optbar [data-opt]'))
+    for (const b of g.querySelectorAll('button')) b.setAttribute('aria-pressed', String(String(settings[g.dataset.opt]) === b.dataset.val));
+}
+// keepQ: ask the same thing again (a change of question type or method), with the choices already dealt
+function refreshQuestion(keepQ) { if (phase === 'question' && cur && !cur.answered) buildQuestion(cur.card, cur.memo, keepQ ? cur.q : null); }
+document.querySelector('.optbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-opt] button');
+  if (!b) return;
+  const key = b.closest('[data-opt]').dataset.opt, val = OPT_VALUE[key](b.dataset.val);
+  if (settings[key] === val) return;
+  settings[key] = val; saveSettings(); syncOptions();
+  if (key === 'ask' && (val === 'geo' || phase === 'nogeo' || (cur && cur.q === 'geo'))) startRound();
+  else if (key === 'ask') refreshQuestion(false);
+  else if (key === 'qtype' || key === 'method') refreshQuestion(true);
+  if (key === 'shuffle') makeOrder();
+  if (key === 'only') { fcInit(); renderFC(false); soDeal(); ctDeal(); nmDeal(); renderCards(); }
+  if (key === 'method') {
+    if (phase === 'question' && cur && cur.answered) renderLearn();
+    if (active.kind === 'ligand') soDeal(); else renderSort();
+    ctRefresh(); renderFC(false); renderCards();
+  }
+});
+syncOptions();
+const resetBtn = $('#reset-progress');
+resetBtn.addEventListener('click', () => {
+  if (resetBtn.dataset.armed) {
+    delete resetBtn.dataset.armed; resetBtn.textContent = 'Reset progress for this set';
+    levels = {}; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); renderCards();
+  } else {
+    resetBtn.dataset.armed = '1'; resetBtn.textContent = 'Click again to reset';
+    setTimeout(() => { delete resetBtn.dataset.armed; resetBtn.textContent = 'Reset progress for this set'; }, 4000);
+  }
+});
+
+/* ---------- flashcards ---------- */
+const fc = { order: [], i: 0, flipped: false, shuffled: false };
+function fcInit() { const cards = notMastered(active.cards); fc.order = fc.shuffled ? shuffle(cards) : cards.slice(); fc.i = 0; fc.flipped = false; }
+// rebuild the deck but stay on the card on screen, if it is still there
+function fcKeep() {
+  const was = fc.order[fc.i], flipped = fc.flipped;
+  fcInit();
+  const k = was ? fc.order.findIndex(c => norm(c.term) === norm(was.term)) : -1;
+  if (k >= 0) { fc.i = k; fc.flipped = flipped; }
+}
+// one line: "Fe 8 + 5 × CO 10 = 18"
+function tallyLine(c) {
+  const rows = settings.method === 'cov' ? covRows(c) : ionRows(c);
+  if (c.mm) rows.push([`${c.mm} M–M`, 2 * c.mm]);
+  const total = rows.reduce((a, r) => a + r[1], 0);
+  return rows.map(([t, v], i) => `${i ? (v < 0 ? ' − ' : ' + ') : ''}${t.replace(/<[^>]+>/g, '')} ${num(Math.abs(v))}`).join('') + ` = ${num(total)}${c.n > 1 ? `, ÷ ${c.n} = ${num(c.ve)}` : ''}`;
+}
+function renderFC(anim) {
+  const c = fc.order[fc.i], el = $('#fc-card'), mineBtn = $('#fc-mine');
+  mineBtn.hidden = !c;
+  el.draggable = !!c;
+  if (!c) {
+    el.classList.remove('flipped');
+    el.innerHTML = `<span class="hint">${active.cards.length ? 'Every card in this set is mastered. Choose All cards to see them again.' : 'This set has no cards yet. Add some in the Cards tab.'}</span>`;
+    $('#fc-count').textContent = '0 / 0';
+    return;
+  }
+  el.dataset.drag = mineBtn.dataset.mine = refKey(c);
+  syncMine();
+  const mol = hasMol(c) ? `<span class="fc-mol">${molSVG(c.mol, fc.flipped ? 1.3 : 1.9, fc.flipped ? 130 : 210, 560)}</span>` : '';
+  el.classList.toggle('flipped', fc.flipped);
+  let back;
+  if (c.kind === 'ligand') {
+    const lg = c.lg;
+    back = `<span class="eyebrow">L/X class</span><span class="big mono">${clsTxt(lg.cls)}</span>
+       <span class="hint">${lg.cov} e neutral · ${lg.ion} e as ${esc(lg.ionName || lg.show)}${lg.q ? ` (${signed(lg.q)})` : ''}</span>`;
+  } else {
+    back = `<span class="eyebrow">Electron count${perMetal(c)}</span><span class="big mono">${num(c.ve)} e</span>
+       ${c.kind === 'complex' ? `<span class="hint">${c.noOs ? 'Oxidation state depends on how NO is counted' : `${esc(c.metal)}(${roman(c.os)}) · ${dTxt(c.dn)}`}</span>
+       <span class="hint">${methodBadge(settings.method)} ${esc(tallyLine(c))}</span>
+       ${c.shape ? `<span class="hint">Geometry: ${SHAPES[c.shape].toLowerCase()}</span>` : ''}` : ''}`;
+  }
+  el.innerHTML = fc.flipped
+    ? `${back}${mol}${c.note ? `<span class="fc-note">${esc(c.note)}</span>` : ''}`
+    : `<span class="eyebrow">${c.kind === 'ligand' ? 'Ligand' : 'Complex'}</span>
+       <span class="big">${esc(c.term)}</span>${c.formula ? `<span class="formula">${esc(c.formula)}</span>` : ''}
+       ${mol}<span class="hint">Click to flip</span>`;
+  ptMark(c.metal, 'flashcards');
+  el.setAttribute('aria-label', fc.flipped ? 'Answer side. Click to show the name.' : `${c.term}. Click to show the answer.`);
+  if (anim) { el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim'); }
+  $('#fc-count').textContent = `${fc.i + 1} / ${fc.order.length}`;
+}
+const fcFlip = () => { if (!fc.order.length) return; fc.flipped = !fc.flipped; renderFC(true); };
+const fcMove = d => { if (!fc.order.length) return; fc.i = (fc.i + d + fc.order.length) % fc.order.length; fc.flipped = false; renderFC(false); };
+$('#fc-card').addEventListener('click', fcFlip);
+$('#fc-prev').addEventListener('click', () => fcMove(-1));
+$('#fc-next').addEventListener('click', () => fcMove(1));
+$('#fc-shuffle').addEventListener('click', e => {
+  fc.shuffled = !fc.shuffled;
+  e.currentTarget.setAttribute('aria-pressed', String(fc.shuffled));
+  e.currentTarget.textContent = fc.shuffled ? 'Shuffled' : 'Shuffle';
+  fcInit(); renderFC(false);
+});
+function openCard(id) {
+  if (!fc.order.some(c => c.id === id)) fcInit();
+  const k = fc.order.findIndex(c => c.id === id);
+  if (k < 0) return;
+  fc.i = k; fc.flipped = false;
+  show('flashcards');
+}
+
+/* ---------- cards ---------- */
+function renderCards() {
+  const s = active;
+  $('#cards-head').innerHTML = `<h2 class="sec">${esc(s.name)}</h2><p class="help">${esc(s.desc)}</p>`
+    + (s.source ? `<p class="src">Source: <a href="${esc(s.source.url)}" target="_blank" rel="noopener">${esc(s.source.label)}</a></p>` : '');
+  $('#copy-row').hidden = s.id === 'custom';
+  $('#editor').hidden = s.id !== 'custom';
+  const key = c => c.kind === 'ligand' ? ligE(c.lg) * 100 + covOf(c.lg.cls) : c.ve;
+  const sorted = notMastered(s.cards).sort((x, y) => key(x) - key(y));
+  $('#tiles').innerHTML = sorted.map(c => {
+    const mol = hasMol(c) ? `<span class="thumb">${molSVG(c.mol, 1.1, 100, 150)}</span>` : '';
+    const sub = c.kind === 'complex' && !c.noOs ? `<span class="talso">${esc(c.metal)}(${roman(c.os)}) ${dTxt(c.dn)}</span>` : '';
+    return `<div class="tile-w"><button type="button" class="tile${mol ? '' : ' nomol'}" data-card="${esc(c.id)}" draggable="true" data-drag="${refKey(c)}" title="Open as a flashcard">${mol}
+        <span class="tname">${esc(c.term)}</span>
+        <span class="tmeta"><span>${cardChip(c)}${sub}</span><i class="dot l${lvl(c.id)}" title="${LEVEL_NAMES[lvl(c.id)]}"></i></span>
+      </button>${star(c)}</div>`;
+  }).join('') || `<p class="help">${s.cards.length ? 'Every card in this set is mastered. Choose All cards to see them again.' : 'No cards yet. Add some below.'}</p>`;
+}
+$('#tiles').addEventListener('click', e => { const t = e.target.closest('[data-card]'); if (t) openCard(t.dataset.card); });
+const msg = (text, ok) => { const m = $('#set-msg'); m.textContent = text; m.className = 'msg ' + (ok ? 'good' : 'bad'); };
+// quiet: a card starred or dropped while studying; the question on screen stays
+function saveCustom(text, quiet) {
+  customText = text; store.set('tmc1.custom', text);
+  CUSTOM.cards = parseCustom(text);
+  $('#set-editor').value = text;
+  if (active === CUSTOM) {
+    const ids = new Set(CUSTOM.cards.map(c => c.id));
+    for (const k of Object.keys(levels)) if (!ids.has(k)) delete levels[k];
+    saveLevels(); makeOrder();
+    if (!quiet) { fcInit(); startRound(); soDeal(); ctDeal(); }
+    else {
+      fcKeep();
+      if (!round) startRound();
+      if (so.cards.length < 3) soDeal();
+      if (ct.phase === 'empty') ctDeal();
+    }
+    renderFC(false); renderCards();
+  }
+  renderSets(); syncMine();
+}
+$('#set-editor').value = customText;
+$('#set-save').addEventListener('click', () => {
+  const text = $('#set-editor').value;
+  if (text.trim() && !parseCustom(text).length) return msg('No cards found. Put one card per line, like: Ferrocene | Cp₂Fe | 18', false);
+  saveCustom(text);
+  msg(`Saved ${plural(CUSTOM.cards.length, 'card')}. Learn starts a fresh round.`, true);
+});
+const copyBtn = $('#copy-set');
+copyBtn.addEventListener('click', () => {
+  const text = serializeCards(active.cards), name = active.name;
+  if (CUSTOM.cards.length && !copyBtn.dataset.armed) {
+    copyBtn.dataset.armed = '1'; copyBtn.textContent = `Click again to replace your ${plural(CUSTOM.cards.length, 'card')}`;
+    setTimeout(() => { delete copyBtn.dataset.armed; copyBtn.textContent = 'Copy to My cards to edit'; }, 4000);
+    return;
+  }
+  delete copyBtn.dataset.armed; copyBtn.textContent = 'Copy to My cards to edit';
+  $('#set-editor').value = text;
+  saveCustom(text);
+  selectSet('custom');
+  msg(`Copied ${plural(CUSTOM.cards.length, 'card')} from ${name}.`, true);
+});
+
+/* ---------- sort ---------- */
+const SORT_SIZES = [6, 9, 12];
+const so = { n: SORT_SIZES.includes(store.get('tmc1.sort.n')) ? store.get('tmc1.sort.n') : 9, cards: [], put: [], checked: false, bins: [], picked: null, eatClick: false };
+const lx = c => parseClass(c.lg.cls);
+function sortBins() {
+  if (active.kind === 'ligand') {
+    if (settings.level === 'easy') return [
+      { label: 'L type', sub: 'L, L₂, L₃', test: c => lx(c)[1] === 0 },
+      { label: 'X type', sub: 'X, X₂, X₃', test: c => lx(c)[0] === 0 },
+      { label: 'Both', sub: 'LX, L₂X, …', test: c => lx(c)[0] > 0 && lx(c)[1] > 0 }];
+    const lo = settings.method === 'ion' ? 2 : 1;
+    const bins = [];
+    for (let v = lo; v <= 5; v++) bins.push({ label: `${v} e`, test: c => ligE(c.lg) === v });
+    return [...bins, { label: '6 e or more', test: c => ligE(c.lg) >= 6 }];
+  }
+  if (settings.level === 'easy') return [
+    { label: 'Under 18', test: c => c.ve < 18 }, { label: '18', test: c => c.ve === 18 }, { label: 'Over 18', test: c => c.ve > 18 }];
+  return [{ label: '14 or fewer', test: c => c.ve <= 14 }, ...[15, 16, 17, 18].map(v => ({ label: String(v), test: c => c.ve === v })),
+    { label: '19 or more', test: c => c.ve >= 19 }];
+}
+const binOf = c => so.bins.findIndex(b => b.test(c));
+function soDeal() {
+  so.bins = sortBins();
+  const names = new Set(), pool = [];
+  for (const c of shuffle(notMastered(active.cards))) if (!names.has(norm(c.term))) { names.add(norm(c.term)); pool.push(c); }
+  // deal round the boxes, so a set full of 18-electron complexes still gives a mix
+  const byBin = so.bins.map((_, b) => pool.filter(c => binOf(c) === b));
+  const pick = [];
+  while (pick.length < so.n && byBin.some(l => l.length))
+    for (const l of shuffle(byBin)) if (l.length && pick.length < so.n) pick.push(l.pop());
+  Object.assign(so, { cards: shuffle(pick), put: pick.map(() => null), checked: false, picked: null });
+  renderSort();
+}
+const GRIP = '<span class="grip" aria-hidden="true"><svg viewBox="0 0 8 14" width="8" height="14" fill="currentColor"><circle cx="1.5" cy="1.5" r="1.5"/><circle cx="6.5" cy="1.5" r="1.5"/><circle cx="1.5" cy="7" r="1.5"/><circle cx="6.5" cy="7" r="1.5"/><circle cx="1.5" cy="12.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/></svg></span>';
+const announceSort = text => { const l = $('#sort-live'); if (l) l.textContent = text; };
+function sortCard(c, k) {
+  const mine = so.put[k], right = binOf(c);
+  let cls = 'scard', meta = '';
+  if (so.checked) {
+    const ok = mine === right;
+    cls += ok ? ' ok' : ' bad';
+    meta = `<span class="tmeta">${cardChip(c)}<span class="rstat">${ok ? '✓' : `→ ${esc(so.bins[right].label)}`}</span></span>`;
+  } else if (so.picked === k) cls += ' picked';
+  const where = mine === null ? 'not placed' : `in ${so.bins[mine].label}`;
+  const mol = hasMol(c) ? `<span class="thumb">${molSVG(c.mol, 1, 64, 130)}</span>` : '';
+  return `<button type="button" class="${cls}" data-k="${k}" aria-label="${esc(c.term)}, ${esc(where)}"${so.checked ? ' tabindex="-1"' : ''}>
+      ${so.checked ? '' : GRIP}${mol}<span class="tname">${esc(c.term)}</span>${c.formula ? `<span class="tsub">${esc(c.formula)}</span>` : ''}${meta}</button>`;
+}
+function renderSort() {
+  const el = $('#sort-box');
+  if (!el) return;
+  if (so.cards.length < 3) {
+    el.innerHTML = `<div class="panel"><div class="qhead"><p class="eyebrow">Sort · ${esc(active.name)}</p>
+        <h2 class="term">Not enough cards</h2><p class="ask">Sorting needs at least 3 cards. This set has ${settings.only === 'todo' ? `${notMastered(active.cards).length} not mastered; choose All cards to sort the others too` : active.cards.length}.</p></div>
+        ${active.id === 'custom' ? '<div class="row end"><button type="button" class="btn" data-goto="cards">Add cards</button></div>' : ''}</div>`;
+    return;
+  }
+  const isLig = active.kind === 'ligand', n = so.cards.length;
+  const ask = isLig
+    ? settings.level === 'easy' ? 'Put each ligand in its box: L type (neutral donors), X type (one-electron, anionic) or both.'
+      : `Put each ligand in the box for the electrons it gives in the ${methodBadge(settings.method, true)} count.`
+    : `Put each complex in the box for its valence electron count${settings.level === 'easy' ? ': fewer than 18, 18, or more' : ''}. For complexes with several metals, count per metal.`;
+  const sizes = SORT_SIZES.map(s => `<button type="button" data-n="${s}" aria-pressed="${s === so.n}">${s}</button>`).join('');
+  const done = so.put.filter(p => p !== null).length;
+  let result = '';
+  if (so.checked) {
+    const right = so.cards.filter((c, k) => so.put[k] === binOf(c)).length;
+    result = `<div aria-live="polite"><p class="verdict${right === n ? ' good' : ''}">${right === n ? 'All in the right box' : `${right} of ${n} in the right box`}</p></div>`;
+  }
+  const inTray = so.cards.map((c, k) => k).filter(k => so.put[k] === null);
+  const tray = so.checked ? '' : `<div class="stray" data-b="tray">${inTray.length ? inTray.map(k => sortCard(so.cards[k], k)).join('')
+    : '<p class="help">All placed. Check, or drag a card back here to take it out of its box.</p>'}</div>`;
+  const bins = so.bins.map((b, i) => {
+    const ks = so.cards.map((c, k) => k).filter(k => so.put[k] === i);
+    return `<div class="sbin" data-b="${i}"><h3><span class="bkey">${i + 1}</span>${esc(b.label)}${b.sub ? ` <small>${esc(b.sub)}</small>` : ''}</h3>
+        ${ks.map(k => sortCard(so.cards[k], k)).join('')}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="panel${so.picked !== null ? ' sort-picking' : ''}">
+      <div class="qhead"><p class="eyebrow">Sort · ${esc(active.name)}</p>
+        <h2 class="term">${isLig && settings.level === 'easy' ? 'L, X or both?' : 'How many electrons?'}</h2><p class="ask">${ask}</p></div>
+      <div class="seg-row"><span class="lab" id="sort-n-lab">Cards</span><div class="seg" role="group" aria-labelledby="sort-n-lab">${sizes}</div></div>
+      ${result}${tray}
+      <div class="sbins">${bins}</div>
+      ${so.checked ? '' : '<p class="help">Drag each card into its box (on a touch screen, by the dotted handle), or tap a card and then a box. With a card focused, the number keys put it in a box and 0 takes it out.</p>'}
+      <div class="row end">${so.checked
+        ? `${addMissedBtn('sort', missedCards('sort'))}<button type="button" class="btn" id="sort-new">New cards</button>`
+        : `<span class="help">${done} of ${n} placed</span><button type="button" class="btn ghost" id="sort-new">New cards</button><button type="button" class="btn" id="sort-check"${done === n ? '' : ' disabled'}>Check</button>`}</div>
+      <p class="sr-only" id="sort-live" aria-live="polite"></p>
+    </div>`;
+}
+// b: a box index, or null for the tray
+function sortPut(k, b) {
+  so.put[k] = b; so.picked = null;
+  renderSort();
+  const t = $(`#sort-box .scard[data-k="${k}"]`); if (t) t.focus({ preventScroll: true });
+  announceSort(`${so.cards[k].term}: ${b === null ? 'taken out' : 'in ' + so.bins[b].label}`);
+}
+const dropTarget = el => { const z = el && el.closest('#sort-box [data-b]'); return z ? (z.dataset.b === 'tray' ? null : +z.dataset.b) : undefined; };
+$('#sort-box').addEventListener('click', e => {
+  if (so.eatClick) return;
+  const card = e.target.closest('.scard');
+  if (card && !so.checked) {
+    const k = +card.dataset.k;
+    // a card picked up and a tap on another card: move it into that card's box
+    if (so.picked !== null && so.picked !== k) return sortPut(so.picked, so.put[k]);
+    so.picked = so.picked === k ? null : k;
+    renderSort(); const t = $(`#sort-box .scard[data-k="${k}"]`); if (t) t.focus({ preventScroll: true });
+    return announceSort(so.picked === null ? `${so.cards[k].term} put back.` : `${so.cards[k].term} picked up. Choose a box.`);
+  }
+  const b = e.target.closest('button');
+  if (b && b.dataset.n) { so.n = +b.dataset.n; store.set('tmc1.sort.n', so.n); soDeal(); }
+  else if (b && b.id === 'sort-check') { so.checked = true; so.picked = null; renderSort(); const r = $('#sort-new'); if (r) r.focus({ preventScroll: true }); }
+  else if (b && b.id === 'sort-new') soDeal();
+  else if (b && b.dataset.goto) show(b.dataset.goto);
+  else if (!b && so.picked !== null) { const t = dropTarget(e.target); if (t !== undefined) sortPut(so.picked, t); }
+});
+$('#sort-box').addEventListener('keydown', e => {
+  const card = e.target.closest('.scard');
+  if (!card || so.checked || e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = +card.dataset.k;
+  if (e.key === '0') { e.preventDefault(); sortPut(k, null); }
+  else if (/^[1-9]$/.test(e.key) && +e.key <= so.bins.length) { e.preventDefault(); sortPut(k, +e.key - 1); }
+  else if (e.key === 'Escape' && so.picked !== null) { so.picked = null; renderSort(); }
+});
+
+/* Dragging: a copy of the card follows the pointer; the box under it lights up. */
+let sdrag = null;
+$('#sort-box').addEventListener('pointerdown', e => {
+  const card = e.target.closest('.scard');
+  if (!card || so.checked || e.button !== 0 || sdrag) return;
+  // on touch screens only the handle drags, so the page still scrolls
+  if (e.pointerType !== 'mouse' && !e.target.closest('.grip')) return;
+  sdrag = { card, k: +card.dataset.k, id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false, over: null };
+});
+window.addEventListener('pointermove', e => {
+  const d = sdrag;
+  if (!d || e.pointerId !== d.id) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6) return;
+    d.on = true;
+    const r = d.card.getBoundingClientRect();
+    d.dx = d.x0 - r.left; d.dy = d.y0 - r.top;
+    d.ghost = d.card.cloneNode(true);
+    d.ghost.classList.add('lift'); d.ghost.classList.remove('picked');
+    d.ghost.style.width = r.width + 'px';
+    document.body.appendChild(d.ghost);
+    d.card.classList.add('dragging');
+    document.body.classList.add('rk-drag');
+    so.picked = null;
+  }
+  e.preventDefault();
+  d.ghost.style.left = (e.clientX - d.dx) + 'px'; d.ghost.style.top = (e.clientY - d.dy) + 'px';
+  const zone = document.elementFromPoint(e.clientX, e.clientY);
+  const z = zone && zone.closest('#sort-box [data-b]');
+  if (z !== d.over) { if (d.over) d.over.classList.remove('over'); if (z) z.classList.add('over'); d.over = z; }
+  const edge = 60;
+  if (e.clientY < edge) scrollBy(0, -12); else if (e.clientY > innerHeight - edge) scrollBy(0, 12);
+});
+for (const type of ['pointerup', 'pointercancel'])
+  window.addEventListener(type, e => {
+    const d = sdrag;
+    if (!d || e.pointerId !== d.id) return;
+    sdrag = null;
+    if (!d.on) return;  // no movement: the click handler treats it as a tap
+    d.ghost.remove();
+    document.body.classList.remove('rk-drag');
+    // the browser may follow the drop with a click; that is not a tap
+    so.eatClick = true; setTimeout(() => { so.eatClick = false; });
+    const t = type === 'pointerup' ? dropTarget(document.elementFromPoint(e.clientX, e.clientY)) : undefined;
+    if (t === undefined) { d.card.classList.remove('dragging'); return; }
+    sortPut(d.k, t);
+  });
+
+/* ---------- count it ---------- */
+const LETTERS = 'ABCDEFGH';
+const ct = { deck: [], i: 0, cur: null, results: [], phase: 'question', retry: false };
+// mononuclear complexes; in the ionic count, not the ones whose oxidation state is a matter of convention
+const ctPool = () => notMastered(active.cards).filter(c => c.kind === 'complex' && c.n === 1 && !(settings.method === 'ion' && c.noOs));
+function ctDeal() {
+  ct.deck = shuffle(ctPool()); ct.i = 0; ct.results = []; ct.retry = false;
+  if (ct.deck.length) ctBuild(); else { ct.phase = 'empty'; renderCount(); }
+}
+// a round of just the questions missed in the round before
+function retryDeck(st, build) {
+  st.deck = shuffle(st.results.filter(r => !r.ok).map(r => r.c)); st.i = 0; st.results = []; st.retry = true;
+  build();
+}
+// the cards to offer for My cards at the end of a round
+function missedCards(where) {
+  if (where === 'learn') return round ? round.results.filter(r => !r.ok).map(r => r.card) : [];
+  if (where === 'sort') return so.cards.filter((c, k) => so.put[k] !== binOf(c));
+  return (where === 'count' ? ct : nm).results.filter(r => !r.ok).map(r => r.c);
+}
+// a buttons row for the end of a round: My cards, go again, and a retry of the missed ones
+function againRow(where, st, again, retry, word) {
+  const missed = st.results.filter(r => !r.ok).length;
+  return `<div class="row end">${addMissedBtn(where, missedCards(where))}${missed
+    ? `<button type="button" class="btn ghost" id="${again}">${word}</button><button type="button" class="btn" id="${retry}">Retry the ${missed} you missed</button>`
+    : `<button type="button" class="btn" id="${again}">${word}</button>`}</div>`;
+}
+function ctFields(c) {
+  const ion = settings.method === 'ion', easy = settings.level === 'easy', rows = [];
+  c.lig.forEach(([k, n], g) => {
+    const L = LIG[k];
+    rows.push({ id: 'l' + g, g, label: `${n > 1 ? n + ' × ' : ''}${esc(ion && easy ? (L.ionName || L.show) : L.show)}`,
+      // the electrons of the whole group: 3 × CO gives 6
+      ask: `electrons${n > 1 ? ` from all ${n}` : ''}${ion && L.q ? (n > 1 ? ', as ions' : ', as an ion') : ''}`,
+      hint: easy && !ion ? `class ${clsTxt(L.cls)}` : '', want: n * (ion ? L.ion : L.cov), n });
+  });
+  if (!ion) {
+    rows.push({ id: 'metal', label: esc(c.metal), ask: 'electrons from the neutral metal', hint: easy ? 'its group number' : '', want: c.group });
+    if (c.charge) rows.push({ id: 'charge', label: `charge ${signed(c.charge)}`, ask: 'electrons to add (+) or take away (−)', hint: easy ? 'an anion has extra electrons' : '', want: -c.charge });
+  } else {
+    rows.push({ id: 'os', q: 'os', label: esc(c.metal), ask: 'oxidation state', hint: easy ? 'charge of the complex minus the charges of the ligands' : '', want: c.os });
+    rows.push({ id: 'dn', q: 'dn', label: esc(c.metal), ask: 'd electrons (dⁿ)', hint: easy ? 'group number minus oxidation state' : '', want: c.dn });
+  }
+  rows.push({ id: 'total', label: 'Total', ask: 'valence electrons', want: c.ve, sum: true });
+  return rows;
+}
+function ctBuild() {
+  const c = ct.deck[ct.i];
+  ct.cur = { c, rows: ctFields(c), vals: {}, checked: false, method: settings.method };
+  ct.phase = 'question';
+  renderCount();
+}
+// a new level moves on to another complex, so the Easy hints don't carry over to Hard
+function ctRelevel() {
+  if (ct.phase !== 'question' || !ct.cur || ct.cur.checked) return ctRefresh();
+  if (ct.deck.length - ct.i > 1) { ct.deck.splice(ct.i, 1); return ctBuild(); }
+  ctRefresh();
+}
+// a change of method re-asks the current complex; answers typed so far are kept where they still fit
+function ctRefresh() {
+  const pool = ctPool();
+  if (!ct.cur || ct.phase !== 'question' || !pool.includes(ct.cur.c)) return ctDeal();
+  if (ct.cur.checked) return renderCount();
+  const vals = ct.cur.method === settings.method ? ct.cur.vals : {};
+  ct.cur = { c: ct.cur.c, rows: ctFields(ct.cur.c), vals, checked: false, method: settings.method };
+  renderCount();
+}
+function ctCheck() {
+  const cc = ct.cur;
+  if (!cc || cc.checked) return;
+  for (const inp of document.querySelectorAll('#count-box input[data-id]')) cc.vals[inp.dataset.id] = inp.value;
+  const empty = cc.rows.find(r => !String(cc.vals[r.id] || '').trim());
+  if (empty) { const i = $(`#count-box input[data-id="${empty.id}"]`); if (i) i.focus(); return; }
+  cc.marks = {};
+  for (const r of cc.rows) cc.marks[r.id] = parseNum(cc.vals[r.id], r.q || 've') === r.want;
+  cc.ok = cc.rows.every(r => cc.marks[r.id]);
+  cc.checked = true;
+  ct.results.push({ c: cc.c, ok: cc.ok });
+  renderCount();
+  const b = $('#ct-next'); if (b) b.focus({ preventScroll: true });
+}
+function ctNext() {
+  ct.i++;
+  if (ct.i < ct.deck.length) return ctBuild();
+  ct.phase = 'summary'; renderCount();
+  const b = $('#ct-retry') || $('#ct-again'); if (b) b.focus({ preventScroll: true });
+}
+// the structure with a letter badge on each ligand's bond to the metal
+function countSVG(cc, maxScale, maxH, maxW) {
+  const c = cc.c, [w, h, metals, anchors, body] = MOLS[c.mol];
+  const BR = 6.8;
+  let x0 = 0, y0 = 0, x1 = w, y1 = h, marks = '';
+  anchors.forEach(([x, y], i) => {
+    const g = c.seq[i], r = cc.rows.find(row => row.g === g);
+    const state = cc.checked ? (cc.marks[r.id] ? ' best' : ' wrong') : '';
+    x0 = Math.min(x0, x - BR - 1); y0 = Math.min(y0, y - BR - 1); x1 = Math.max(x1, x + BR + 1); y1 = Math.max(y1, y + BR + 1);
+    marks += `<g class="site${state}"><circle class="badge" cx="${x}" cy="${y}" r="${BR}"/><text class="bl" x="${x}" y="${y + 3.3}" text-anchor="middle">${LETTERS[g]}</text></g>`;
+  });
+  const halos = metals.map(([x, y]) => `<circle class="halo" cx="${x}" cy="${y}" r="10.5"/>`).join('');
+  const W = x1 - x0, H = y1 - y0, s = Math.min(maxScale, maxH / H, maxW / W);
+  return `<svg class="mol smol" viewBox="${x0} ${y0} ${W} ${H}" width="${Math.round(W * s)}" height="${Math.round(H * s)}" role="img" aria-label="Structure of ${esc(c.term)} with lettered ligands">${halos}${body}${marks}</svg>`;
+}
+function ctRow(cc, r) {
+  const v = cc.vals[r.id] || '', done = cc.checked;
+  let cls = 'crow' + (r.sum ? ' sum' : ''), fix = '';
+  if (done) { cls += cc.marks[r.id] ? ' ok' : ' bad'; if (!cc.marks[r.id]) fix = `<span class="fix">→ ${esc(r.q === 'os' ? signed(r.want) : r.q === 'dn' ? dTxt(r.want) : num(r.want))}</span>`; }
+  const badge = r.g !== undefined ? `<span class="lbadge">${LETTERS[r.g]}</span>` : '';
+  return `<div class="${cls}"><span class="clab">${badge}<strong>${r.label}</strong><span class="cask">${r.ask}</span>${r.hint ? `<span class="chint">${r.hint}</span>` : ''}</span>
+      <span class="cin">${fix}<input data-id="${r.id}" type="text" inputmode="text" value="${esc(v)}" aria-label="${esc(r.label.replace(/<[^>]+>/g, ''))}: ${esc(r.ask)}"${done ? ' disabled' : ''}></span></div>`;
+}
+function renderCount() {
+  const el = $('#count-box');
+  if (ct.phase === 'empty') {
+    const why = active.kind === 'ligand' ? 'Count it works on complexes. Pick a set of complexes.'
+      : `This set has no ${settings.only === 'todo' ? 'unmastered ' : ''}complexes with one metal${settings.method === 'ion' ? ' whose oxidation state is unambiguous' : ''}. Pick another set${settings.only === 'todo' ? ', or choose All cards' : ''}.`;
+    el.innerHTML = `<div class="panel"><div class="qhead"><p class="eyebrow">Count it · ${esc(active.name)}</p><h2 class="term">Nothing to count here</h2><p class="ask">${why}</p></div></div>`;
+    return;
+  }
+  if (ct.phase === 'summary') {
+    const res = ct.results, ok = res.filter(r => r.ok).length;
+    const rows = res.map(r => `<li><span class="t">${esc(r.c.term)}</span>${chipE(r.c.ve)}<span class="pill" data-l="${r.ok ? 3 : 1}">${r.ok ? 'Right' : 'Missed'}</span>${star(r.c)}</li>`).join('');
+    el.innerHTML = `<div class="panel"><div class="qhead"><p class="eyebrow">Count it · ${esc(active.name)}${ct.retry ? ' · missed questions' : ''} · done</p>
+        <h2 class="term">${ok} of ${res.length} counted right</h2></div>
+        <ul class="summary">${rows}</ul>
+        ${againRow('count', ct, 'ct-again', 'ct-retry', 'Go again')}</div>`;
+    return;
+  }
+  const cc = ct.cur, c = cc.c;
+  ptMark(c.metal, 'count');
+  const struct = hasMol(c) ? `<figure class="struct site-struct">${countSVG(cc, 2.3, 260, 640)}</figure>` : '';
+  const ask = settings.method === 'ion'
+    ? `Count it the ${methodBadge('ion', true)} way: the electrons from each kind of ligand, as ions (all of that kind together), then the metal's oxidation state and d electrons, then the total.`
+    : `Count it the ${methodBadge('cov', true)} way: the electrons from each kind of ligand, as neutral groups (all of that kind together), then the neutral metal, the charge, and the total.`;
+  const fb = cc.checked ? `<div class="feedback" aria-live="polite">
+      <p class="verdict ${cc.ok ? 'good' : 'bad'}">${cc.ok ? 'All correct' : `${cc.rows.filter(r => cc.marks[r.id]).length} of ${cc.rows.length} right`}</p>
+      ${tallyHTML(c)}${c.note && !c.noOs ? `<p class="note">${esc(c.note)}</p>` : ''}
+      <div class="row end"><button type="button" class="btn" id="ct-next">${ct.i + 1 < ct.deck.length ? 'Next complex' : 'See results'}</button></div></div>`
+    : `<div class="row end"><span class="help">Enter moves to the next box.</span><button type="button" class="btn" id="ct-check">Check</button></div>`;
+  el.innerHTML = `<div class="panel">
+      <div class="qhead"><div class="qtop"><p class="eyebrow">Count it${ct.retry ? ' · missed' : ''} · ${ct.i + 1} of ${ct.deck.length}</p><div class="tags">${c.charge ? `<span class="pill ion">${c.charge > 0 ? 'cation' : 'anion'}</span>` : ''}${star(c)}</div></div>
+        <div class="qmain" draggable="true" data-drag="${refKey(c)}"><div class="qtext"><h2 class="term">${esc(c.term)}</h2><p class="formula">${esc(c.formula)}</p></div>${struct}</div>
+        <p class="ask">${ask}</p></div>
+      <div class="cgrid">${cc.rows.map(r => ctRow(cc, r)).join('')}</div>${fb}
+    </div>`;
+}
+$('#count-box').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.id === 'ct-check') ctCheck();
+  else if (b.id === 'ct-next') ctNext();
+  else if (b.id === 'ct-again') ctDeal();
+  else if (b.id === 'ct-retry') retryDeck(ct, ctBuild);
+});
+$('#count-box').addEventListener('input', e => { const i = e.target.closest('input[data-id]'); if (i && ct.cur) ct.cur.vals[i.dataset.id] = i.value; });
+$('#count-box').addEventListener('keydown', e => {
+  const i = e.target.closest('input[data-id]');
+  if (!i || e.key !== 'Enter') return;
+  e.preventDefault();
+  const all = [...document.querySelectorAll('#count-box input[data-id]')], k = all.indexOf(i);
+  if (k < all.length - 1) all[k + 1].focus(); else ctCheck();
+});
+
+/* ---------- name it ---------- */
+const NAMED = (() => {
+  const seen = new Set(), out = [];
+  for (const c of COMPLEXES) if (c.fam && hasMol(c) && !seen.has(c.term)) { seen.add(c.term); out.push(c); }
+  return out;
+})();
+const NAME_LISTS = [{ id: 'all', name: 'All named complexes', cards: NAMED },
+  ...[...new Set(NAMED.map(c => c.fam))].map(f => ({ id: f, name: cap(f), cards: NAMED.filter(c => c.fam === f) }))];
+const NM_DIRS = { struct: 'Structure → name', name: 'Name → structure' };
+const nm = { list: null, dir: store.get('tmc1.name.dir') === 'name' ? 'name' : 'struct', deck: [], i: 0, cur: null, phase: 'question', results: [], streak: 0, retry: false };
+const nmSeen = store.get('tmc1.named') || {};  // term -> 1 if last answer right, else 0
+
+function nmSelect(id) {
+  nm.list = NAME_LISTS.find(l => l.id === id) || NAME_LISTS[0];
+  store.set('tmc1.name.list', nm.list.id);
+  nmDeal(); renderNmSide();
+}
+function nmDeal() {
+  if (!nm.list) return;
+  // Not mastered: leave out the complexes named right last time
+  nm.deck = shuffle(settings.only === 'todo' ? nm.list.cards.filter(c => nmSeen[c.term] !== 1) : nm.list.cards); nm.i = 0; nm.results = []; nm.retry = false;
+  if (nm.deck.length) nmBuild(); else { nm.phase = 'empty'; renderName(); }
+}
+// a new level deals another complex in place of an unanswered one; an answered one keeps its bonus choices
+function nmRelevel() {
+  if (nm.phase !== 'question' || !nm.cur || nm.cur.chosen !== null) return;
+  if (nm.deck.length - nm.i > 1) nm.deck.splice(nm.i, 1);
+  nmBuild();
+}
+function nmOptions(c) {
+  const others = NAMED.filter(o => o.term !== c.term && o.mol !== c.mol);
+  const same = shuffle(others.filter(o => o.fam === c.fam)), diff = shuffle(others.filter(o => o.fam !== c.fam));
+  const pool = settings.level === 'hard' ? [...same, ...diff] : [...diff, ...same];
+  return shuffle([c, ...pool.slice(0, 3)]);
+}
+function nmBuild() {
+  const c = nm.deck[nm.i];
+  nm.cur = { c, options: nmOptions(c), chosen: null, ok: null, bonus: null };
+  nm.phase = 'question';
+  renderName();
+}
+function nmChoose(i) {
+  const cc = nm.cur;
+  if (nm.phase !== 'question' || !cc || cc.chosen !== null || !cc.options[i]) return;
+  cc.chosen = i; cc.ok = cc.options[i] === cc.c;
+  nm.streak = cc.ok ? nm.streak + 1 : 0;
+  nm.results.push({ c: cc.c, ok: cc.ok });
+  nmSeen[cc.c.term] = cc.ok ? 1 : 0; store.set('tmc1.named', nmSeen);
+  // a right name earns a bonus question: the complex's electron count
+  if (cc.ok) cc.bonus = { options: numericOptions('ve', cc.c.ve), chosen: null };
+  renderName(); renderNmSide();
+  const b = cc.ok ? $('#name-box .bonus .opt') : $('#nm-next'); if (b) b.focus({ preventScroll: true });
+}
+function nmBonus(i) {
+  const b = nm.cur && nm.cur.bonus;
+  if (!b || b.chosen !== null || b.options[i] === undefined) return;
+  b.chosen = i;
+  renderName();
+  const n = $('#nm-next'); if (n) n.focus({ preventScroll: true });
+}
+function nmNext() {
+  nm.i++;
+  if (nm.i < nm.deck.length) return nmBuild();
+  nm.phase = 'summary'; renderName();
+  const b = $('#nm-retry') || $('#nm-again'); if (b) b.focus({ preventScroll: true });
+}
+const nmDirRow = () => `<div class="seg-row"><span class="lab" id="nm-dir-lab">Show</span>
+    <div class="seg" role="group" aria-labelledby="nm-dir-lab">${Object.entries(NM_DIRS).map(([k, t]) =>
+      `<button type="button" data-dir="${k}" aria-pressed="${nm.dir === k}">${t}</button>`).join('')}</div></div>`;
+function renderName() {
+  const el = $('#name-box');
+  if (nm.phase === 'empty') {
+    el.innerHTML = `<div class="panel">${nmDirRow()}<p class="help">${settings.only === 'todo' && nm.list.cards.length ? 'You named every complex in this list right last time. Choose All cards to go through them again.' : 'No complexes in this list.'}</p></div>`;
+    return;
+  }
+  if (nm.phase === 'summary') {
+    const res = nm.results, ok = res.filter(r => r.ok).length;
+    const rows = res.map(r => `<li><span class="t">${esc(r.c.term)}</span>${chipE(r.c.ve)}<span class="pill" data-l="${r.ok ? 3 : 1}">${r.ok ? 'Right' : 'Missed'}</span>${star(r.c)}</li>`).join('');
+    el.innerHTML = `<div class="panel">${nmDirRow()}<div class="qhead"><p class="eyebrow">${esc(nm.list.name)}${nm.retry ? ' · missed questions' : ''} · done</p>
+        <h2 class="term">${ok} of ${res.length} named</h2></div><ul class="summary">${rows}</ul>
+        ${againRow('name', nm, 'nm-again', 'nm-retry', 'Go again')}</div>`;
+    return;
+  }
+  const cc = nm.cur, c = cc.c, done = cc.chosen !== null, byStruct = nm.dir === 'struct';
+  ptMark(done || byStruct ? c.metal : null, 'name');
+  const tags = (nm.streak >= 2 ? `<span class="pill" data-l="3">${nm.streak} in a row</span>` : '') + star(c);
+  const head = byStruct
+    ? `<div class="qmain" draggable="true" data-drag="${refKey(c)}"><figure class="struct">${molSVG(c.mol, 2.4, 260, 680, !done)}</figure></div><p class="ask">Which complex is this?</p>`
+    : `<div class="qtext" draggable="true" data-drag="${refKey(c)}"><h2 class="term">${esc(c.term)}</h2></div><p class="ask">Which structure is it?</p>`;
+  const opts = cc.options.map((o, i) => {
+    let cls = 'opt rich';
+    if (done) cls += o === c ? ' correct' : cc.chosen === i ? ' wrong' : ' dim';
+    const val = byStruct
+      ? `<span class="val"><span>${esc(o.term)}</span>${done ? `<small>${esc(o.formula)}</small>` : ''}</span>`
+      : `<span class="val"><span class="othumb">${molSVG(o.mol, 1.2, 110, 230)}</span>${done ? `<small>${esc(o.term)}</small>` : ''}</span>`;
+    return `<button type="button" class="${cls}" data-i="${i}"${done ? ' disabled' : ''}><span class="key">${i + 1}</span>${val}</button>`;
+  }).join('');
+  let fb = '';
+  if (done) {
+    const b = cc.bonus;
+    let bonus = '';
+    if (b) {
+      const bo = b.options.map((v, i) => {
+        let cls = 'opt';
+        if (b.chosen !== null) cls += v === c.ve ? ' correct' : b.chosen === i ? ' wrong' : ' dim';
+        return `<button type="button" class="${cls}" data-bonus="${i}"${b.chosen !== null ? ' disabled' : ''}><span class="key">${i + 1}</span><span class="val num">${num(v)}</span></button>`;
+      }).join('');
+      bonus = `<div class="bonus stack"><p class="fbline"><strong>Bonus:</strong> its valence electron count${perMetal(c)}?</p><div class="options">${bo}</div>
+          ${b.chosen !== null ? `<p class="verdict ${b.options[b.chosen] === c.ve ? 'good' : 'bad'}">${b.options[b.chosen] === c.ve ? 'Right' : 'Not quite'}: ${num(c.ve)} electrons</p>${tallyHTML(c)}` : ''}</div>`;
+    }
+    const ready = !b || b.chosen !== null;
+    fb = `<div class="feedback" aria-live="polite">
+        <p class="verdict ${cc.ok ? 'good' : 'bad'}">${cc.ok ? 'Correct' : 'Not quite'}</p>
+        <p class="fbline">This is <strong>${esc(c.term)}</strong>, ${esc(c.formula)}${cc.ok ? '' : `: ${num(c.ve)} electrons`}.</p>
+        ${c.note ? `<p class="note">${esc(c.note)}</p>` : ''}${bonus}
+        <div class="row end"><button type="button" class="btn${ready ? '' : ' ghost'}" id="nm-next">${nm.i + 1 < nm.deck.length ? (ready ? 'Next complex' : 'Skip the bonus') : 'See results'}</button></div></div>`;
+  }
+  el.innerHTML = `<div class="panel">${nmDirRow()}
+      <div class="qhead"><div class="qtop"><p class="eyebrow">Name it${nm.retry ? ' · missed' : ''} · ${nm.i + 1} of ${nm.deck.length}</p><div class="tags">${tags}</div></div>${head}</div>
+      <div class="options">${opts}</div>${fb}</div>`;
+}
+function renderNmSide() {
+  $('#nm-lists').innerHTML = NAME_LISTS.map(l => {
+    const n = l.cards.length, right = l.cards.filter(c => nmSeen[c.term] === 1).length, tried = l.cards.some(c => c.term in nmSeen);
+    return `<button type="button" class="set" data-list="${esc(l.id)}" aria-pressed="${l === nm.list}">
+        <span class="nm">${esc(l.name)}</span>
+        <span class="meta"><span>${n} complex${n === 1 ? '' : 'es'}</span><span>${tried ? `${right} right` : 'not tried'}</span></span>
+        <span class="mini"><i style="width:${n ? right / n * 100 : 0}%"></i></span>
+      </button>`;
+  }).join('');
+}
+$('#nm-lists').addEventListener('click', e => {
+  const b = e.target.closest('[data-list]');
+  if (b && b.dataset.list !== nm.list.id) nmSelect(b.dataset.list);
+});
+$('#name-box').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.i !== undefined) nmChoose(+b.dataset.i);
+  else if (b.dataset.bonus !== undefined) nmBonus(+b.dataset.bonus);
+  else if (b.dataset.dir) { if (nm.dir !== b.dataset.dir) { nm.dir = b.dataset.dir; store.set('tmc1.name.dir', nm.dir); nmDeal(); } }
+  else if (b.id === 'nm-next') nmNext();
+  else if (b.id === 'nm-again') nmDeal();
+  else if (b.id === 'nm-retry') retryDeck(nm, nmBuild);
+});
+
+/* ---------- tabs + keys ---------- */
+const VIEWS = ['learn', 'sort', 'count', 'name', 'flashcards', 'cards'];
+function show(v) {
+  view = v;
+  for (const name of VIEWS) {
+    $('#view-' + name).hidden = name !== v;
+    $('#tab-' + name).setAttribute('aria-selected', String(name === v));
+  }
+  // Name it has its own lists of named complexes in place of the sets
+  $('#side-sets').hidden = v === 'name';
+  $('#side-named').hidden = v !== 'name';
+  $('#ptable').hidden = v === 'cards';
+  for (const el of document.querySelectorAll('.optbar [data-for]')) {
+    const on = el.dataset.for.split(' ').includes(v);
+    el.classList.toggle('off', !on);
+    el.title = on ? '' : 'Not used in this tab';
+    for (const c of el.querySelectorAll('button, select, input')) c.disabled = !on;
+  }
+  const tb = $('#tab-' + v), strip = tb.parentElement;
+  if (strip.scrollWidth > strip.clientWidth)
+    strip.scrollLeft += tb.getBoundingClientRect().left - strip.getBoundingClientRect().left - (strip.clientWidth - tb.offsetWidth) / 2;
+  ptMark(null, v);
+  if (v === 'learn') renderLearn();
+  if (v === 'sort') renderSort();
+  if (v === 'count') renderCount();
+  if (v === 'name') renderName();
+  if (v === 'flashcards') renderFC(false);
+  if (v === 'cards') renderCards();
+  const top = $('.main').getBoundingClientRect().top;
+  if (top < 0) window.scrollBy({ top: top - 12 });
+}
+document.querySelector('.modes').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) show(b.dataset.view); });
+document.addEventListener('click', e => { const b = e.target.closest('#sort-box [data-goto], #count-box [data-goto]'); if (b) show(b.dataset.goto); });
+
+document.addEventListener('keydown', e => {
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (view === 'learn') {
+    if (phase === 'question' && cur && !cur.answered && cur.type === 'mc' && /^[1-4]$/.test(e.key)) { e.preventDefault(); choose(+e.key - 1); }
+    else if (e.key === 'Enter' && tag !== 'BUTTON') {
+      const b = $('#continue') || $('#next-round');
+      if (b) { e.preventDefault(); b.click(); }
+    }
+  } else if (view === 'flashcards') {
+    if (e.key === ' ' && tag !== 'BUTTON') { e.preventDefault(); fcFlip(); }
+    else if (e.key === 'ArrowRight') fcMove(1);
+    else if (e.key === 'ArrowLeft') fcMove(-1);
+  } else if (view === 'name' && nm.phase === 'question' && nm.cur) {
+    if (/^[1-4]$/.test(e.key)) {
+      e.preventDefault();
+      if (nm.cur.chosen === null) nmChoose(+e.key - 1); else if (nm.cur.bonus) nmBonus(+e.key - 1);
+    } else if (e.key === 'Enter' && tag !== 'BUTTON') { const b = $('#nm-next'); if (b) { e.preventDefault(); b.click(); } }
+  } else if ((view === 'name' || view === 'count') && e.key === 'Enter' && tag !== 'BUTTON') {
+    const p = view === 'name' ? 'nm' : 'ct', b = $(`#${p}-retry`) || $(`#${p}-again`);
+    if (b) { e.preventDefault(); b.click(); }
+  }
+});
+
+/* ---------- periodic table: groups 3–12 ---------- */
+const PT_ROWS = [['Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn'],
+  ['Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd'],
+  ['La', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg']];
+$('#pt-grid').innerHTML = `<thead><tr><th scope="col">gr<span class="pl">oup</span></th>${PT_ROWS[0].map((_, g) => `<th scope="col">${g + 3}</th>`).join('')}</tr></thead><tbody>`
+  + PT_ROWS.map((r, i) => `<tr><th scope="row"><span class="pl">period </span>${i + 4}</th>${r.map((el, g) => `<td data-el="${el}" title="${el}: group ${g + 3}, ${g + 3} electrons as a neutral atom">${el}</td>`).join('')}</tr>`).join('') + '</tbody>';
+// highlight the metal of the question on screen; tabs in the background re-render too, so only the visible one marks
+function ptMark(sym, from) {
+  if (from !== view) return;
+  for (const td of document.querySelectorAll('#pt-grid td')) td.classList.toggle('on', td.dataset.el === sym);
+}
+const ptEl = $('#ptable');
+ptEl.open = store.get('tmc1.pt') !== false;
+ptEl.addEventListener('toggle', () => store.set('tmc1.pt', ptEl.open));
+
+/* ---------- boot ---------- */
+selectSet(store.get('tmc1.active') || 'core');
+nmSelect(store.get('tmc1.name.list') || 'all');
+syncLevel();
+const start = (location.hash || '').slice(1);
+show(VIEWS.includes(start) ? start : 'learn');
+</script>
