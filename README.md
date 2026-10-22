@@ -18,9 +18,11 @@ You can also download `tmc_learn.html` and open it in any browser.
 - Geometry: from the number of ligands, the electron count and dⁿ, guess the shape (linear to octahedral) of 133 complexes; on Hard the look-alike with the same number of ligands is always among the choices
 - A fold-out d-block periodic table with group numbers, the metal of the current question highlighted
 - Sort: deal 6, 9 or 12 complexes and put each in its box: under 18, 18 or over 18 electrons (Easy), or 14, 15, 16, 17, 18, 19 (Hard)
-- Count it: work through the count of a complex line by line, one ligand at a time, then the metal, the charge and the total (or the oxidation state and dⁿ in the ionic count)
-- Name it: 47 complexes with a common name (Wilkinson's, Vaska's, Grubbs, Schrock, Zeise's salt, …); name the structure or pick the structure for the name, then a bonus question on its electron count
-- Easy and Hard levels: answer choices are at least 2 apart on Easy and next to each other on Hard; in Name it, Hard takes the wrong answers from the same family
+- Count it: work through the count of a complex line by line, one ligand at a time, then the metal, the charge and the total (or the oxidation state and dⁿ in the ionic count); at the end of a round, retry the ones you missed
+- Name it: 47 complexes with a common name (Wilkinson's, Vaska's, Grubbs, Schrock, Zeise's salt, …); name the structure or pick the structure for the name, then a bonus question on its electron count; retry the ones you missed
+- Easy and Hard levels: answer choices are at least 2 apart on Easy and next to each other on Hard; in Name it, Hard takes the wrong answers from the same family. Changing the level deals another card, so the choices of the two levels can't be compared
+- My cards: star any card ☆ in any tab, or drag it onto My cards, to collect the ones you want to revise; at the end of a round, add the ones you missed in one click. You can also write your own cards or paste a Quizlet export
+- Not mastered: in Sort, Count it, Name it, Flashcards and Cards, leave out the cards you have already mastered in Learn
 
 ## Counting conventions
 
@@ -28,6 +30,14 @@ You can also download `tmc_learn.html` and open it in any browser.
 - Grubbs alkylidenes count as neutral 2-electron carbenes (Ru(II)); Schrock alkylidenes, oxo and imido count as X₂ or LX₂. Linear imido gives 4 electrons; π-donation from oxo, alkoxide and amide is not counted.
 - Cyclobutadiene counts as a neutral 4-electron L₂ ligand.
 - A bridging CO gives 2 electrons shared by two metals; each metal–metal bond gives one electron to each metal. Complexes with several metals are counted per metal.
+
+## How it is built
+
+`src/build.py` counts every complex in `src/tmc_sets.py` by both methods (`src/tmc_count.py`, with the ligand library in `src/tmc_ligands.py`), stops if a count differs from the one typed in the set, draws the structures with RDKit and writes them, with the sets, into `src/template.html`:
+
+    python src/build.py      # writes tmc_learn.html, and src/dist/tmc_learn.html without <head> for a Claude artifact
+
+It needs Python 3 and RDKit.
 
 ## Sources
 
