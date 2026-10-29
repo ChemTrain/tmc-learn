@@ -933,7 +933,8 @@ function buildQuestion(card, memo = {}, keepQ = null) {
 // on a new level: swap the card on screen for one not yet in this round, or else the next one in the round;
 // a card swapped out stays out of the round, so switching back can't bring its choices up again
 function relevelQuestion() {
-  if (phase !== 'question' || !cur || cur.answered) return;
+  if (phase !== 'question' || !cur) return;
+  if (cur.answered) return advance();  // a new difficulty applies from the next question on, at once
   const out = round.out || (round.out = new Set());
   out.add(cur.card);
   const spare = order.find(c => lvl(c.id) < 3 && askable(c) && !round.queue.includes(c) && !out.has(c));
@@ -1191,6 +1192,8 @@ document.querySelector('.optbar').addEventListener('click', e => {
   if (settings[key] === val) return;
   settings[key] = val; saveSettings(); syncOptions();
   if (key === 'ask' && (val === 'geo' || phase === 'nogeo' || (cur && cur.q === 'geo'))) startRound();
+  // a new question type or answer direction gives an answered question way to the next; a new method only redraws it
+  else if ((key === 'ask' || key === 'qtype') && phase === 'question' && cur && cur.answered) advance();
   else if (key === 'ask') refreshQuestion(false);
   else if (key === 'qtype' || key === 'method') refreshQuestion(true);
   if (key === 'shuffle') makeOrder();
@@ -1571,7 +1574,8 @@ function ctBuild() {
 }
 // a new level moves on to another complex, so the Easy hints don't carry over to Hard
 function ctRelevel() {
-  if (ct.phase !== 'question' || !ct.cur || ct.cur.checked) return ctRefresh();
+  if (ct.phase === 'question' && ct.cur && ct.cur.checked) return ctNext();
+  if (ct.phase !== 'question' || !ct.cur) return ctRefresh();
   if (ct.deck.length - ct.i > 1) { ct.deck.splice(ct.i, 1); return ctBuild(); }
   ctRefresh();
 }
@@ -1702,9 +1706,10 @@ function nmDeal() {
   nm.deck = shuffle(settings.only === 'todo' ? nm.list.cards.filter(c => nmSeen[c.term] !== 1) : nm.list.cards); nm.i = 0; nm.results = []; nm.retry = false;
   if (nm.deck.length) nmBuild(); else { nm.phase = 'empty'; renderName(); }
 }
-// a new level deals another complex in place of an unanswered one; an answered one keeps its bonus choices
+// a new level deals another complex in place of an unanswered one; an answered one gives way to the next
 function nmRelevel() {
-  if (nm.phase !== 'question' || !nm.cur || nm.cur.chosen !== null) return;
+  if (nm.phase !== 'question' || !nm.cur) return;
+  if (nm.cur.chosen !== null) return nmNext();
   if (nm.deck.length - nm.i > 1) nm.deck.splice(nm.i, 1);
   nmBuild();
 }
