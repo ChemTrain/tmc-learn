@@ -438,21 +438,21 @@ body.rk-drag { user-select: none; -webkit-user-select: none; cursor: grabbing; }
       <div class="field" data-for="learn sort count flashcards cards">Counting
         <div class="seg" role="group" aria-label="Counting method" data-opt="method"><button type="button" data-val="cov" title="Neutral ligands: L gives 2 electrons, X gives 1">Covalent</button><button type="button" data-val="ion" title="Ligands as closed-shell ions: Cl⁻ gives 2, Cp⁻ gives 6">Ionic</button></div>
       </div>
-      <div class="field" data-for="learn">Ask for
-        <div class="seg" role="group" aria-label="Ask for" data-opt="ask"><button type="button" data-val="ve">Electron count</button><button type="button" data-val="os">Ox. state</button><button type="button" data-val="dn">dⁿ</button><button type="button" data-val="geo" title="Guess the shape from the electron count">Geometry</button><button type="button" data-val="mix" title="A mix of all four">Mixed</button></div>
+      <div class="field" data-for="learn">Answer with
+        <div class="seg" role="group" aria-label="Answer with" data-opt="ask"><button type="button" data-val="all" title="Electron count, oxidation state, dⁿ and geometry in turn">All</button><button type="button" data-val="ve">Electron count</button><button type="button" data-val="os">Ox. state</button><button type="button" data-val="dn">dⁿ</button><button type="button" data-val="geo" title="Guess the shape from the electron count">Geometry</button></div>
       </div>
       <div class="field" data-for="learn">Questions
         <div class="seg" role="group" aria-label="Questions" data-opt="qtype"><button type="button" data-val="mixed" title="Multiple choice until a card is familiar, then typed">Mixed</button><button type="button" data-val="mc">Choices</button><button type="button" data-val="written">Typed</button></div>
       </div>
+      <div class="field" data-for="learn sort count name flashcards cards">Ask
+        <div class="seg" role="group" aria-label="Ask" data-opt="only"><button type="button" data-val="all" title="Every card, mastered or not">All cards</button><button type="button" data-val="todo" title="Only the cards you have not mastered in Learn yet">Not mastered</button></div>
+      </div>
       <div class="field" data-for="learn">Card order
         <div class="seg" role="group" aria-label="Card order" data-opt="shuffle"><button type="button" data-val="true">Shuffled</button><button type="button" data-val="false">Set order</button></div>
       </div>
-      <div class="field" data-for="sort count name flashcards cards">Cards
-        <div class="seg" role="group" aria-label="Which cards" data-opt="only"><button type="button" data-val="all">All</button><button type="button" data-val="todo" title="Leave out the cards you have mastered in Learn">Not mastered</button></div>
-      </div>
     </div>
     <div class="optfoot">
-      <p class="help">Both counting methods give the same total, oxidation state and dⁿ; they differ in what each ligand gives. Answer choices are at least 2 apart on Easy and next to each other on Hard; changing the level deals another card. Geometry hides the structure: guess the shape from the number of ligands and the electron count. In the Ligands set, the other choices ask for the L/X class. A card is mastered after two correct answers in a row; progress is saved in this browser. Not mastered leaves out the cards you have mastered in Learn (in Name it, the complexes you named right last time). Star a card ☆, or drag it onto My cards, to keep it in your own set.</p>
+      <p class="help">Both counting methods give the same total, oxidation state and dⁿ; they differ in what each ligand gives. Answer choices are at least 2 apart on Easy and next to each other on Hard; changing the level deals another card. Geometry hides the structure: guess the shape from the number of ligands and the electron count. In the Ligands set, the other choices ask for the L/X class. Answer with All asks the electron count, oxidation state, dⁿ and geometry in turn. A card is mastered after two correct answers in a row, in every set that holds it; progress is saved in this browser. Ask All cards goes through every card once per pass, mastered ones too; Not mastered leaves out the cards you have mastered in Learn (in Name it, the complexes you named right last time). Star a card ☆, or drag it onto My cards, to keep it in your own set.</p>
       <div data-for="learn flashcards cards"><button class="btn ghost small" id="reset-progress" type="button">Reset progress for this set</button></div>
     </div>
   </section>
@@ -660,7 +660,9 @@ function serializeCards(cards) {
 
 let customText = store.get('tmc1.custom') || '';
 const CUSTOM = { id: 'custom', name: 'My cards', kind: 'custom', desc: 'Your own complexes and their electron counts, the cards you starred, or a set exported from Quizlet.', source: null, cards: parseCustom(customText) };
-const SETS = [...BUILTIN, CUSTOM];
+// the whole pool comes first and is the default, then My cards, then the sets
+const ALL = { id: 'all', name: 'All complexes and ligands', kind: 'all', desc: 'Every complex and ligand in TMC Learn.', source: null, cards: BUILTIN.flatMap(s => s.cards) };
+const SETS = [ALL, CUSTOM, ...BUILTIN];
 
 /* ---------- my cards: star a card anywhere, or drag it onto My cards ---------- */
 // cards on screen are named by a short key, so the page never shows a hidden answer in an attribute
@@ -751,20 +753,31 @@ document.addEventListener('dragend', endDrag);
 const notMastered = cards => settings.only === 'todo' ? cards.filter(c => lvl(c.id) < 3) : cards;
 
 /* ---------- state ---------- */
-const settings = Object.assign({ qtype: 'mixed', ask: 've', method: 'cov', shuffle: true, level: 'easy', only: 'all' }, store.get('tmc1.settings') || {});
-let active = null, levels = {}, roundNo = 1;
+const settings = Object.assign({ qtype: 'mixed', ask: 'all', method: 'cov', shuffle: true, level: 'easy', only: 'all' }, store.get('tmc1.settings') || {});
+if (!settings.allAsk) { settings.ask = 'all'; settings.allAsk = true; }  // "All" (once "Mixed") is the new default
+// One mastery record per card, shared by every set: the whole pool and its sets move together.
+// It starts from the per-set records kept before, taking each card's best level.
+function loadAllLevels() {
+  let all = store.get('tmc1.levels');
+  if (!all) {
+    all = {};
+    for (const s of SETS) for (const [k, v] of Object.entries(store.get('tmc1.levels.' + s.id) || {})) all[k] = Math.max(all[k] || 0, v);
+    store.set('tmc1.levels', all);
+  }
+  return all;
+}
+let active = null, levels = loadAllLevels(), roundNo = 1;
 let order = [], round = null, cur = null, phase = 'question', view = 'learn';
 const lvl = id => levels[id] || 0;
-const loadLevels = id => store.get('tmc1.levels.' + id) || {};
 const saveSettings = () => store.set('tmc1.settings', settings);
-function saveLevels() { store.set('tmc1.levels.' + active.id, levels); renderSets(); }
+function saveLevels() { store.set('tmc1.levels', levels); renderSets(); }
 function saveRound() { store.set('tmc1.round.' + active.id, roundNo); }
-function makeOrder() { order = settings.shuffle ? shuffle(active.cards) : active.cards.slice(); }
+let passSeen = new Set();  // cards asked in this pass, when Ask is All cards
+function makeOrder() { order = settings.shuffle ? shuffle(active.cards) : active.cards.slice(); passSeen = new Set(); }
 
 function selectSet(id) {
   active = SETS.find(s => s.id === id) || SETS[0];
-  store.set('tmc1.active', active.id);
-  levels = loadLevels(active.id);
+  store.set('tmc1.pick', active.id);  // a new key, so everyone starts once on the whole pool
   roundNo = store.get('tmc1.round.' + active.id) || 1;
   makeOrder(); fcInit(); startRound(); soDeal(); ctDeal();
   renderSets(); renderCards(); renderFC(false);
@@ -772,9 +785,8 @@ function selectSet(id) {
 
 function renderSets() {
   $('#sets').innerHTML = SETS.map(s => {
-    const lv = s === active ? levels : loadLevels(s.id);
     const n = s.cards.length;
-    const m = s.cards.filter(c => (lv[c.id] || 0) === 3).length;
+    const m = s.cards.filter(c => lvl(c.id) === 3).length;
     const share = n ? m / n * 100 : 0;
     const what = s.kind === 'ligand' ? 'ligand' : 'card';
     return `<button type="button" class="set" data-set="${s.id}" aria-pressed="${s === active}">
@@ -808,9 +820,14 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-leve
 function startRound() {
   if (!active.cards.length) { phase = 'empty'; round = null; cur = null; renderLearn(); return; }
   if (!active.cards.some(askable)) { phase = 'nogeo'; round = null; cur = null; renderLearn(); return; }
-  const pending = order.filter(c => lvl(c.id) < 3 && askable(c));
+  let pending = order.filter(c => lvl(c.id) < 3 && askable(c));
+  if (settings.only === 'all') {  // every card once per pass, mastered ones too
+    pending = order.filter(c => !passSeen.has(c.id) && askable(c));
+    if (!pending.length) { makeOrder(); pending = order.filter(askable); }
+  }
   if (!pending.length) { phase = 'done'; round = null; renderLearn(); return; }
   const pick = pending.slice(0, ROUND_SIZE);
+  for (const c of pick) passSeen.add(c.id);
   round = { queue: settings.shuffle ? shuffle(pick) : pick, i: 0, results: [] };
   buildQuestion(round.queue[0]);
 }
@@ -849,11 +866,19 @@ function geoOptions(ans) {
 
 // What a question asks: ve electron count, os oxidation state, dn d-electrons, geo the shape,
 // le electrons a ligand gives (by the chosen method), cls a ligand's L/X class.
+// "All" takes them in turn, skipping a kind a card cannot be asked (no oxidation state, no simple shape).
+const ALL_Q = ['ve', 'os', 'dn', 'geo'];
+let qTurn = Math.random() * ALL_Q.length | 0, ligTurn = Math.random() * 2 | 0;
 function pickQ(c) {
   const a = settings.ask;
-  if (c.kind === 'ligand') return a === 've' ? 'le' : a === 'mix' ? (Math.random() < 0.5 ? 'le' : 'cls') : 'cls';
+  if (c.kind === 'ligand') return a === 've' ? 'le' : a === 'all' ? ['le', 'cls'][ligTurn++ % 2] : 'cls';
   if (c.kind === 'custom') return 've';
-  if (a === 'mix') { const qs = [...(c.noOs ? ['ve'] : ['ve', 've', 'os', 'dn']), ...(c.shape ? ['geo'] : [])]; return qs[Math.random() * qs.length | 0]; }
+  if (a === 'all') {
+    for (let k = 0; k < ALL_Q.length; k++) {
+      const q = ALL_Q[qTurn++ % ALL_Q.length];
+      if (q === 've' || (q === 'geo' ? !!c.shape : !c.noOs)) return q;
+    }
+  }
   if (a === 'geo') return c.shape ? 'geo' : 've';
   return c.noOs ? 've' : a;
 }
@@ -1136,11 +1161,11 @@ $('#learn-box').addEventListener('click', e => {
   const t = e.target.closest('button');
   if (!t) return;
   if (t.dataset.i !== undefined) choose(+t.dataset.i);
-  else if (t.id === 'continue') advance();
+  else if (t.id === 'continue') { advance(); scrollMain(); }
   else if (t.id === 'dont-know') submitWritten(true);
   else if (t.id === 'override') override();
-  else if (t.id === 'next-round') { roundNo++; saveRound(); startRound(); }
-  else if (t.id === 'study-again') { levels = {}; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); }
+  else if (t.id === 'next-round') { roundNo++; saveRound(); startRound(); scrollMain(); }
+  else if (t.id === 'study-again') { for (const c of active.cards) delete levels[c.id]; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); scrollMain(); }
   else if (t.dataset.goto) show(t.dataset.goto);
 });
 $('#learn-box').addEventListener('submit', e => { e.preventDefault(); submitWritten(false); });
@@ -1163,7 +1188,7 @@ document.querySelector('.optbar').addEventListener('click', e => {
   else if (key === 'ask') refreshQuestion(false);
   else if (key === 'qtype' || key === 'method') refreshQuestion(true);
   if (key === 'shuffle') makeOrder();
-  if (key === 'only') { fcInit(); renderFC(false); soDeal(); ctDeal(); nmDeal(); renderCards(); }
+  if (key === 'only') { makeOrder(); startRound(); fcInit(); renderFC(false); soDeal(); ctDeal(); nmDeal(); renderCards(); }
   if (key === 'method') {
     if (phase === 'question' && cur && cur.answered) renderLearn();
     if (active.kind === 'ligand') soDeal(); else renderSort();
@@ -1175,7 +1200,7 @@ const resetBtn = $('#reset-progress');
 resetBtn.addEventListener('click', () => {
   if (resetBtn.dataset.armed) {
     delete resetBtn.dataset.armed; resetBtn.textContent = 'Reset progress for this set';
-    levels = {}; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); renderCards();
+    for (const c of active.cards) delete levels[c.id]; saveLevels(); roundNo = 1; saveRound(); makeOrder(); startRound(); renderCards();
   } else {
     resetBtn.dataset.armed = '1'; resetBtn.textContent = 'Click again to reset';
     setTimeout(() => { delete resetBtn.dataset.armed; resetBtn.textContent = 'Reset progress for this set'; }, 4000);
@@ -1235,7 +1260,7 @@ function renderFC(anim) {
   $('#fc-count').textContent = `${fc.i + 1} / ${fc.order.length}`;
 }
 const fcFlip = () => { if (!fc.order.length) return; fc.flipped = !fc.flipped; renderFC(true); };
-const fcMove = d => { if (!fc.order.length) return; fc.i = (fc.i + d + fc.order.length) % fc.order.length; fc.flipped = false; renderFC(false); };
+const fcMove = d => { if (!fc.order.length) return; fc.i = (fc.i + d + fc.order.length) % fc.order.length; fc.flipped = false; renderFC(false); scrollMain(); };
 $('#fc-card').addEventListener('click', fcFlip);
 $('#fc-prev').addEventListener('click', () => fcMove(-1));
 $('#fc-next').addEventListener('click', () => fcMove(1));
@@ -1279,9 +1304,7 @@ function saveCustom(text, quiet) {
   CUSTOM.cards = parseCustom(text);
   $('#set-editor').value = text;
   if (active === CUSTOM) {
-    const ids = new Set(CUSTOM.cards.map(c => c.id));
-    for (const k of Object.keys(levels)) if (!ids.has(k)) delete levels[k];
-    saveLevels(); makeOrder();
+    makeOrder();
     if (!quiet) { fcInit(); startRound(); soDeal(); ctDeal(); }
     else {
       fcKeep();
@@ -1427,7 +1450,7 @@ $('#sort-box').addEventListener('click', e => {
   const b = e.target.closest('button');
   if (b && b.dataset.n) { so.n = +b.dataset.n; store.set('tmc1.sort.n', so.n); soDeal(); }
   else if (b && b.id === 'sort-check') { so.checked = true; so.picked = null; renderSort(); const r = $('#sort-new'); if (r) r.focus({ preventScroll: true }); }
-  else if (b && b.id === 'sort-new') soDeal();
+  else if (b && b.id === 'sort-new') { soDeal(); scrollMain(); }
   else if (b && b.dataset.goto) show(b.dataset.goto);
   else if (!b && so.picked !== null) { const t = dropTarget(e.target); if (t !== undefined) sortPut(so.picked, t); }
 });
@@ -1637,9 +1660,9 @@ $('#count-box').addEventListener('click', e => {
   const b = e.target.closest('button');
   if (!b) return;
   if (b.id === 'ct-check') ctCheck();
-  else if (b.id === 'ct-next') ctNext();
-  else if (b.id === 'ct-again') ctDeal();
-  else if (b.id === 'ct-retry') retryDeck(ct, ctBuild);
+  else if (b.id === 'ct-next') { ctNext(); scrollMain(); }
+  else if (b.id === 'ct-again') { ctDeal(); scrollMain(); }
+  else if (b.id === 'ct-retry') { retryDeck(ct, ctBuild); scrollMain(); }
 });
 $('#count-box').addEventListener('input', e => { const i = e.target.closest('input[data-id]'); if (i && ct.cur) ct.cur.vals[i.dataset.id] = i.value; });
 $('#count-box').addEventListener('keydown', e => {
@@ -1791,13 +1814,19 @@ $('#name-box').addEventListener('click', e => {
   if (b.dataset.i !== undefined) nmChoose(+b.dataset.i);
   else if (b.dataset.bonus !== undefined) nmBonus(+b.dataset.bonus);
   else if (b.dataset.dir) { if (nm.dir !== b.dataset.dir) { nm.dir = b.dataset.dir; store.set('tmc1.name.dir', nm.dir); nmDeal(); } }
-  else if (b.id === 'nm-next') nmNext();
-  else if (b.id === 'nm-again') nmDeal();
-  else if (b.id === 'nm-retry') retryDeck(nm, nmBuild);
+  else if (b.id === 'nm-next') { nmNext(); scrollMain(); }
+  else if (b.id === 'nm-again') { nmDeal(); scrollMain(); }
+  else if (b.id === 'nm-retry') { retryDeck(nm, nmBuild); scrollMain(); }
 });
 
 /* ---------- tabs + keys ---------- */
 const VIEWS = ['learn', 'sort', 'count', 'name', 'flashcards', 'cards'];
+// After a long explanation the next question can be much shorter (and a round summary much longer): when the top
+// of the main column has scrolled out of sight, bring it back, so the new question starts at the top of the screen.
+function scrollMain(smooth = true) {
+  const top = $('.main').getBoundingClientRect().top;
+  if (top < 0) window.scrollBy({ top: top - 12, behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+}
 function show(v) {
   view = v;
   for (const name of VIEWS) {
@@ -1824,8 +1853,7 @@ function show(v) {
   if (v === 'name') renderName();
   if (v === 'flashcards') renderFC(false);
   if (v === 'cards') renderCards();
-  const top = $('.main').getBoundingClientRect().top;
-  if (top < 0) window.scrollBy({ top: top - 12 });
+  scrollMain(false);
 }
 document.querySelector('.modes').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (b) show(b.dataset.view); });
 document.addEventListener('click', e => { const b = e.target.closest('#sort-box [data-goto], #count-box [data-goto]'); if (b) show(b.dataset.goto); });
@@ -1870,7 +1898,7 @@ ptEl.open = store.get('tmc1.pt') !== false;
 ptEl.addEventListener('toggle', () => store.set('tmc1.pt', ptEl.open));
 
 /* ---------- boot ---------- */
-selectSet(store.get('tmc1.active') || 'core');
+selectSet(store.get('tmc1.pick') || 'all');
 nmSelect(store.get('tmc1.name.list') || 'all');
 syncLevel();
 const start = (location.hash || '').slice(1);
