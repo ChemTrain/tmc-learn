@@ -16,7 +16,7 @@ You can also download `tmc_learn.html` and open it in any browser.
 - A 2D structure for nearly every complex, with the metal highlighted
 - Two counting methods, covalent (neutral ligands, Green's L/X classification) and ionic; every answer shows the tally by both
 - Learn (multiple choice, then typed answers) asks for the electron count, the oxidation state or dⁿ, or all of them in turn (the default); after a long explanation the page scrolls back to the next question; flashcards; space for your own cards or a Quizlet export
-- Geometry: from the number of ligands, the electron count and dⁿ, guess the shape (linear to octahedral) of 133 complexes; on Hard the look-alike with the same number of ligands is always among the choices
+- Geometry: from the formula alone (no name, no drawing, no cis/trans/fac/mer until you answer), with the number of ligands, the electron count and dⁿ given, guess the shape (linear to octahedral) of 133 complexes; on Hard the look-alike with the same number of ligands is always among the choices
 - A fold-out d-block periodic table with group numbers, the metal of the current question highlighted
 - Sort: deal 6, 9 or 12 complexes and put each in its box: under 18, 18 or over 18 electrons (Easy), or 14, 15, 16, 17, 18, 19 (Hard)
 - Count it: work through the count of a complex line by line, one ligand at a time, then the metal, the charge and the total (or the oxidation state and dⁿ in the ionic count); at the end of a round, retry the ones you missed

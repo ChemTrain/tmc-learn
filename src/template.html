@@ -452,7 +452,7 @@ body.rk-drag { user-select: none; -webkit-user-select: none; cursor: grabbing; }
       </div>
     </div>
     <div class="optfoot">
-      <p class="help">Both counting methods give the same total, oxidation state and dⁿ; they differ in what each ligand gives. Answer choices are at least 2 apart on Easy and next to each other on Hard; changing the level deals another card. Geometry hides the structure: guess the shape from the number of ligands and the electron count. In the Ligands set, the other choices ask for the L/X class. Answer with All asks the electron count, oxidation state, dⁿ and geometry in turn. A card is mastered after two correct answers in a row, in every set that holds it; progress is saved in this browser. Ask All cards goes through every card once per pass, mastered ones too; Not mastered leaves out the cards you have mastered in Learn (in Name it, the complexes you named right last time). Star a card ☆, or drag it onto My cards, to keep it in your own set.</p>
+      <p class="help">Both counting methods give the same total, oxidation state and dⁿ; they differ in what each ligand gives. Answer choices are at least 2 apart on Easy and next to each other on Hard; changing the level deals another card. Geometry shows only the formula (no name, no structure, no cis/trans) until you answer: guess the shape from the number of ligands and the electron count. In the Ligands set, the other choices ask for the L/X class. Answer with All asks the electron count, oxidation state, dⁿ and geometry in turn. A card is mastered after two correct answers in a row, in every set that holds it; progress is saved in this browser. Ask All cards goes through every card once per pass, mastered ones too; Not mastered leaves out the cards you have mastered in Learn (in Name it, the complexes you named right last time). Star a card ☆, or drag it onto My cards, to keep it in your own set.</p>
       <div data-for="learn flashcards cards"><button class="btn ghost small" id="reset-progress" type="button">Reset progress for this set</button></div>
     </div>
   </section>
@@ -836,6 +836,8 @@ function startRound() {
 const SHAPES = { lin: 'Linear', trig: 'Trigonal planar', tet: 'Tetrahedral', sqpl: 'Square planar', tbp: 'Trigonal bipyramidal',
   sqpy: 'Square pyramidal', oct: 'Octahedral', tprism: 'Trigonal prismatic' };
 const SITES = { lin: 2, trig: 3, tet: 4, sqpl: 4, tbp: 5, sqpy: 5, oct: 6, tprism: 6 };
+// a geometry question shows the formula alone until answered: no name, and no cis/trans/fac/mer, which would tell the shape
+const bareFormula = f => (f || '').replace(/\b(cis|trans|fac|mer)-/g, '');
 const ML = n => 'ML' + String(n).replace(/\d/g, x => SUB[x]);
 // the rule of thumb behind a shape, worded for this complex
 function shapeRule(c) {
@@ -1018,7 +1020,8 @@ function questionHTML() {
   const tags = `<div class="tags">${c.charge ? `<span class="pill ion">${c.charge > 0 ? 'cation' : 'anion'}</span>` : ''}<span class="pill" data-l="${shown}">${LEVEL_NAMES[shown]}</span>${star(c)}</div>`;
   const head = `<div class="qhead"><div class="qtop"><p class="eyebrow">${c.kind === 'ligand' ? 'Ligand' : 'Complex'}</p>${tags}</div>
       <div class="qmain" draggable="true" data-drag="${refKey(c)}">
-        <div class="qtext"><h2 class="term">${esc(c.term)}</h2>${c.formula ? `<p class="formula">${esc(c.formula)}</p>` : ''}</div>
+        <div class="qtext">${cur.q === 'geo' && !cur.answered ? `<h2 class="term">${esc(bareFormula(c.formula))}</h2>`
+          : `<h2 class="term">${esc(c.term)}</h2>${c.formula ? `<p class="formula">${esc(c.formula)}</p>` : ''}`}</div>
         ${cur.q === 'geo' ? `<div class="givens"><span><b>${SITES[c.shape]}</b> ligand sites</span><span><b>${c.ve}</b> electrons</span><span><b>${dTxt(c.dn)}</b> ${esc(c.metal)}(${roman(c.os)})</span></div>`
           : hasMol(c) ? `<figure class="struct">${molSVG(c.mol, 2.4, 250, 680, !cur.answered)}</figure>` : ''}
       </div>
