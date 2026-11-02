@@ -1,0 +1,16 @@
+# TMC Learn: complexes and ligands with no drawing yet (their geom is None in tmc_sets.py; Tp in tmc_ligands.py).
+# Draw them by hand and save each as an MDL .mol file (ChemDraw: File > Save As > MDL Molfile);
+# the build can then use your layout. One structure per line: SMILES, a tab, the name.
+# "->" is a dative bond (use a plain single bond if your program rejects it); "*" is a Cp ring.
+# Every SMILES parses with RDKit and gives the right formula.
+O=C1[Fe]23(C#O)(C#O)(C#O)[Fe]1(C2=O)(C3=O)(C#O)(C#O)C#O	Fe2(CO)9, diiron nonacarbonyl
+O=C1[Fe]23(C#O)(C#O)(C#O)[Fe]1(C2=O)(C#O)(C#O)(C#O)[Fe]3(C#O)(C#O)(C#O)C#O	Fe3(CO)12, triiron dodecacarbonyl
+O#C[Ir]12(C#O)(C#O)[Ir]3(C#O)(C#O)(C#O)[Ir]1(C#O)(C#O)(C#O)[Ir]23(C#O)(C#O)C#O	Ir4(CO)12, tetrairidium dodecacarbonyl
+O#C[Co]12(C#O)(C#O)[Co]3(C#O)(C#O)(C#O)C1(c1ccccc1)C23c1ccccc1	Co2(CO)6(μ-PhC≡CPh), dicobalt hexacarbonyl alkyne complex
+*[Mo](C#O)(C#O)(C#O)[Mo](*)(C#O)(C#O)C#O	[CpMo(CO)3]2, cyclopentadienylmolybdenum tricarbonyl dimer
+O#C[Mn+]%10%11(C#O)(C#O)<-n1cccn1[B-]([H])(n1cccn->%101)n1cccn->%111	TpMn(CO)3, trispyrazolylborate manganese tricarbonyl
+[H][B-](n1cccn1)(n1cccn1)n1cccn1	Tp, hydrotris(pyrazolyl)borate (the κ³ ligand on its own)
+[H][Re-2]([H])([H])([H])([H])([H])([H])([H])[H]	[ReH9]2-, nonahydridorhenate
+[H][W]([H])([H])([H])([H])([H])(<-P(C)(C)C)(<-P(C)(C)C)<-P(C)(C)C	WH6(PMe3)3
+[H][Ir]([H])([H])([H])([H])(<-P(C(C)C)(C(C)C)C(C)C)<-P(C(C)C)(C(C)C)C(C)C	IrH5(P(i-Pr)3)2
+N#C[Mo-4](C#N)(C#N)(C#N)(C#N)(C#N)(C#N)C#N	[Mo(CN)8]4-, octacyanomolybdate(IV)
