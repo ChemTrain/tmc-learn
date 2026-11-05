@@ -343,6 +343,7 @@ def assemble(metal, ligands, geom):
 
     centre = mean(metals)
     hapto, anchors, label_of = [], [], {}
+    circles = []  # η⁵ rings (Cp, Cp*): single bonds and a circle inside, drawn by draw()
     bi = ti = 0
     for key in ligands:
         lig = LIGANDS[key]
@@ -350,6 +351,24 @@ def assemble(metal, ligands, geom):
             raise ValueError(f"{key} has no drawing")
         mol, xy, points, labels, mpos = fragment(key)
         orders = lig.get("order", [1] * len(points))
+        # aromatic rings are drawn with alternating single and double bonds (pyridine, bpy, porphyrin, arenes); a
+        # cyclopentadienyl ring has no such structure, so it gets single bonds and a circle
+        ring5 = []
+        if any(b.GetIsAromatic() for b in mol.GetBonds()):
+            kek = Chem.RWMol(mol)
+            try:
+                Chem.Kekulize(kek, clearAromaticFlags=True)
+                mol = kek.GetMol()
+            except Exception:
+                kek = Chem.RWMol(mol)
+                ring5 = [a.GetIdx() for a in kek.GetAtoms() if a.GetIsAromatic()]
+                for b in kek.GetBonds():
+                    if b.GetIsAromatic():
+                        b.SetBondType(Chem.BondType.SINGLE)
+                        b.SetIsAromatic(False)
+                for a in kek.GetAtoms():
+                    a.SetIsAromatic(False)
+                mol = kek.GetMol()
         if lig.get("bridging"):
             if bi >= len(bridges):
                 raise ValueError(f"geometry {geom} has only {len(bridges)} bridge sites")
@@ -384,6 +403,8 @@ def assemble(metal, ligands, geom):
             bonded = [(m, p, o, site[2]) for site, p, o in zip(sites, points, orders)]
 
         off = rw.GetNumAtoms()
+        if ring5:
+            circles.append([off + i for i in ring5])
         for a in mol.GetAtoms():
             rw.AddAtom(a)
         for b in mol.GetBonds():
@@ -422,6 +443,7 @@ def assemble(metal, ligands, geom):
         conf.SetAtomPosition(i, Point3D(x, y, 0))
     mol.RemoveAllConformers()
     mol.AddConformer(conf)
+    mol.SetProp("_circles", json.dumps(circles))
     return mol, midx, hapto, anchors
 
 
@@ -518,13 +540,20 @@ def draw(mol, midx, hapto, anchors):
         p = drawer.GetDrawCoords(i)
         return p.x, p.y
 
+    ring_r = {}
+    for atoms in json.loads(mol.GetProp("_circles")) if mol.HasProp("_circles") else []:
+        cx, cy = mean([at(i) for i in atoms])
+        dists = [math.hypot(x - cx, y - cy) for x, y in (at(i) for i in atoms)]
+        r = 0.58 * sum(dists) / len(dists)
+        ring_r[frozenset(atoms)] = r
+        paths.append(f'<circle class="b c" cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}"/>')
     for m, atoms in hapto:
         mx, my = at(m)
         cx, cy = mean([at(i) for i in atoms])
         d = math.hypot(cx - mx, cy - my) or 1
         sx, sy = mx + (cx - mx) / d * LABEL_GAP, my + (cy - my) / d * LABEL_GAP
-        # stop short of a ring centre, so the line meets the ring rather than crossing it
-        stop = 0 if len(atoms) == 2 else 4
+        # stop short of a ring centre, so the line meets the ring rather than crossing it; at a ring's circle
+        stop = ring_r.get(frozenset(atoms), 0 if len(atoms) == 2 else 4)
         ex, ey = cx - (cx - mx) / d * stop, cy - (cy - my) / d * stop
         paths.insert(0, f'<path class="b c" d="M{sx:.1f},{sy:.1f}L{ex:.1f},{ey:.1f}"/>')
 
