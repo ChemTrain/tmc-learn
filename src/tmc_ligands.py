@@ -198,7 +198,8 @@ LIGANDS = {
                    smiles="[O:1]c1c(C(C)(C)C)cc(C(C)(C)C)cc1C=[N:2]C1CCCCC1[N:3]=Cc1cc(C(C)(C)C)cc(C(C)(C)C)c1[O:4]",
                    ion="salen*²⁻"),
     "por":    dict(name="porphyrinato (κ⁴)", show="por", cls="L2X2",
-                   smiles="c1cc2cc3ccc(cc4ccc(cc5ccc(cc1[n:1]2)[n:2]5)[n:3]4)[n:4]3", ion="por²⁻"),
+                   smiles="C1=CC2=CC3=[N:4]C(=CC4=CC=C(C=C5C=CC(=[N:2]5)C=C1[N:1]2)[N:3]4)C=C3", ion="por²⁻"),
+    # drawn as the dianion: two N with a C=N bond (L) and two with single bonds only (X), as L2X2 counts it
 
     # ---------------- bridging ----------------
     "mu-Cl":  dict(name="chloride, bridging (μ-Cl)", show="μ-Cl", cls="LX", smiles="[Cl:1]", bridging=True, ion="Cl⁻"),
