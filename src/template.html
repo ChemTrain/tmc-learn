@@ -403,6 +403,8 @@ body.rk-drag { user-select: none; -webkit-user-select: none; cursor: grabbing; }
 .set.drop { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent); }
 .mine-drop { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 30; max-width: calc(100vw - 32px); padding: 14px 22px; border: 2px dashed var(--accent); border-radius: 12px; background: var(--surface); color: var(--ink); font-weight: 600; text-align: center; box-shadow: 0 6px 24px rgb(0 0 0 / .18); }
 .mine-drop.drop { background: var(--accent-soft); }
+/* Unicode superscripts set as <sup> (see superscripts()) */
+sup.us { font-size: .7em; line-height: 0; vertical-align: .5em; }
 </style>
 
 <!--__LOGO_DEFS__-->
@@ -1911,4 +1913,38 @@ nmSelect(store.get('tmc1.name.list') || 'all');
 syncLevel();
 const start = (location.hash || '').slice(1);
 show(VIEWS.includes(start) ? start : 'learn');
+
+/* ---------- superscripts: a run of Unicode superscripts (d¹⁰, ¹⁹F, Cu²⁺) is set as <sup>, since fonts draw ¹²³ (Latin-1)
+   and ⁰⁴⁵⁶⁷⁸⁹⁺⁻ (another Unicode block) at different heights; the text itself, and every question built from it, stay as they are ---------- */
+const SUP_MAP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁺': '+', '⁻': '−' };
+const SUP_RE = /[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+/g;
+function superscripts(root) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), hits = [];
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    SUP_RE.lastIndex = 0;
+    if (SUP_RE.test(n.nodeValue) && n.parentElement && !n.parentElement.closest('script, style, textarea, title, sup, svg, option')) hits.push(n);
+  }
+  for (const n of hits) {
+    // one inline span holds the text and its superscripts, so a grid or flex parent sees one item, as before
+    const s = n.nodeValue, frag = document.createElement('span');
+    let last = 0;
+    SUP_RE.lastIndex = 0;
+    for (let m; (m = SUP_RE.exec(s)); ) {
+      const sup = document.createElement('sup');
+      sup.className = 'us';
+      sup.textContent = [...m[0]].map(c => SUP_MAP[c]).join('');
+      frag.append(s.slice(last, m.index), sup);
+      last = SUP_RE.lastIndex;
+    }
+    frag.append(s.slice(last));
+    n.replaceWith(frag);
+  }
+}
+new MutationObserver(ms => {
+  for (const m of ms) for (const n of m.addedNodes) {
+    if (n.nodeType === 1) superscripts(n);
+    else if (n.nodeType === 3 && n.parentNode) superscripts(n.parentNode);
+  }
+}).observe(document.body, { childList: true, subtree: true });
+superscripts(document.body);
 </script>
