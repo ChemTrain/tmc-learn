@@ -58,6 +58,6 @@ GitHub's **Cite this repository** button (from `CITATION.cff`) gives the same re
 
 - Code (the HTML, CSS and JavaScript): [MIT](LICENSE).
 - Content (the card sets, ligand library, questions, notes and structure drawings): [CC BY 4.0](LICENSE-CONTENT.md). You may reuse and adapt it, as long as you credit TMC Learn.
-- Logo (`logo.svg`): the locomotive is adapted from [Twemoji](https://github.com/jdecked/twemoji), © Twitter, Inc and other contributors, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the benzene-ring smoke was added for ChemTrain.
+- Logo (`logo.svg`) and loading screen (`loader.svg`): the locomotive is adapted from [Twemoji](https://github.com/jdecked/twemoji), © Twitter, Inc and other contributors, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the benzene-ring smoke was added for ChemTrain.
 
 TMC Learn is a sibling of [pKa Learn](https://github.com/ChemTrain/pka-learn) and shares its page design.

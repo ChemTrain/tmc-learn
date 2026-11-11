@@ -65,6 +65,50 @@ def add_logo(page):
     use = f'<svg class="logo" viewBox="0 0 {w} {h}" aria-hidden="true"><use href="#ct-logo"/></svg>'
     return page.replace("<!--__LOGO_DEFS__-->", defs).replace("<!--__LOGO__-->", use)
 
+# The loading screen and the way back to the ChemTrain home page, shared by every ChemTrain app (a copy of
+# chemtrain-src/shared/frame.py; keep the two the same). The header's logo tile links to HOME and carries
+# data-home; in a frame (a claude.ai artifact) the screen's script makes that link open a new tab.
+HOME = "https://chemtrain.github.io/"
+LOADER = HERE.parent / "loader.svg"  # the moving train
+MARK = "<!--__LOADER__-->"
+
+
+def loader_html():
+    svg = base64.b64encode(LOADER.read_bytes()).decode()
+    return (
+        '<div id="ct-loading" aria-hidden="true"><div class="ct-ld">'
+        f'<img src="data:image/svg+xml;base64,{svg}" alt="" width="96" height="132"><span>Loading</span></div></div>\n'
+        "<style>\n"
+        "#ct-loading { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;"
+        " background: var(--bg, #EDF1F4); transition: opacity .3s ease, visibility 0s linear .3s; }\n"
+        "#ct-loading .ct-ld { display: grid; justify-items: center; gap: 12px; animation: ct-ld-in .35s ease .3s both; }\n"
+        "#ct-loading img { display: block; width: 96px; height: auto; padding: 16px 20px; box-sizing: content-box;"
+        " background: var(--logo-tile, #FFFFFF); border: 1px solid var(--line, #D3DBE2); border-radius: 24px; }\n"
+        "#ct-loading span { font: 600 12px/1 var(--f-body, system-ui, sans-serif); letter-spacing: .14em;"
+        " text-transform: uppercase; color: var(--muted, #566472); }\n"
+        "#ct-loading.ct-done { opacity: 0; visibility: hidden; }\n"
+        "@keyframes ct-ld-in { from { opacity: 0; transform: translateY(8px); } }\n"
+        "@media (prefers-reduced-motion: reduce) { #ct-loading .ct-ld { animation-name: ct-ld-fade; } "
+        "@keyframes ct-ld-fade { from { opacity: 0; } } }\n"
+        "</style>\n"
+        "<script>\n"
+        "(function () {\n"
+        "  function ready() {\n"
+        "    var l = document.getElementById('ct-loading');\n"
+        "    if (l) { l.classList.add('ct-done'); setTimeout(function () { l.remove(); }, 400); }\n"
+        "    if (window.top !== window) document.querySelectorAll('a[data-home]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });\n"
+        "  }\n"
+        "  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else setTimeout(ready);\n"
+        "})();\n"
+        "</script>"
+    )
+
+
+def add_loader(page):
+    if MARK not in page:
+        sys.exit(f"template needs a {MARK} mark (right after its <style>)")
+    return page.replace(MARK, loader_html(), 1)
+
 
 def favicon():
     """A square version of the logo for the browser tab of the stand-alone page."""
@@ -741,7 +785,7 @@ def main():
     template = TEMPLATE.read_text(encoding="utf-8")
     if PLACEHOLDER not in template:
         sys.exit(f"{TEMPLATE.name} has no {PLACEHOLDER} placeholder")
-    page = add_logo(template.replace(PLACEHOLDER, blob))
+    page = add_loader(add_logo(template.replace(PLACEHOLDER, blob)))
     FRAGMENT.parent.mkdir(exist_ok=True)
     FRAGMENT.write_text(page, encoding="utf-8")
     STANDALONE.write_text(STANDALONE_HEAD + favicon() + page, encoding="utf-8")
