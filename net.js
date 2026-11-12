@@ -108,8 +108,9 @@
 
   /* ---------- the account ---------- */
   function setAccount(a) { save('ct.account', a); save('ct.sync.snap', null); save('ct.sync.updated', null); }
-  async function join(pseudo) { const r = await api('/join', { pseudo }); setAccount(r); await Promise.all([sync({ noReload: true }), flushScores()]); return r; }
-  async function login(key) { const r = await api('/login', { key }); setAccount({ id: r.id, key: String(key).toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1').match(/.{1,4}/g).join('-'), pseudo: r.pseudo }); await Promise.all([sync({ noReload: true }), flushScores()]); return r; }
+  async function join(pseudo, pub) { const r = await api('/join', { pseudo, public: pub === false ? 0 : 1 }); setAccount(r); await Promise.all([sync({ noReload: true }), flushScores()]); return r; }
+  async function login(key) { const r = await api('/login', { key }); setAccount({ id: r.id, public: r.public, key: String(key).toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1').match(/.{1,4}/g).join('-'), pseudo: r.pseudo }); await Promise.all([sync({ noReload: true }), flushScores()]); return r; }
+  async function setPublic(pub) { const r = await authed('/privacy', { public: pub ? 1 : 0 }); save('ct.account', { ...account(), public: r.public }); return r; }
   async function rename(pseudo) { const r = await authed('/pseudo', { pseudo }); save('ct.account', { ...account(), pseudo: r.pseudo }); return r; }
   function logout() { for (const k of ['ct.account', 'ct.sync.snap', 'ct.sync.updated', 'ct.sync.at']) save(k, null); }
   async function remove() { await authed('/delete', {}); logout(); }
@@ -118,6 +119,6 @@
   addEventListener('online', () => { sync(); flushScores(); });
   setInterval(() => { if (account() && !document.hidden && dirty()) sync(); }, 60000);
 
-  window.CT = { API, api, authed, account, join, login, logout, rename, remove, sync, submitScore, flushScores, scoreOf, KIND, hash };
+  window.CT = { API, api, authed, account, join, login, logout, rename, setPublic, remove, sync, submitScore, flushScores, scoreOf, KIND, hash };
   if (account()) { sync(); flushScores(); }
 })();

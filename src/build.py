@@ -107,7 +107,9 @@ def loader_html():
 def net_html():
     """The account and its progress across devices (net.js), with the merge rules it shares with the server."""
     rules = (HERE.parent / "sync_rules.js").read_text(encoding="utf-8").replace("export { KIND, mergeDocs };", "")
-    return "<script>\n" + rules + "\n" + (HERE.parent / "net.js").read_text(encoding="utf-8") + "</script>"
+    # one closure: nothing but window.CT reaches the page's globals (Reactivity Learn has its own KIND)
+    return ("<script>\n(function () {\n" + rules + "\n" + (HERE.parent / "net.js").read_text(encoding="utf-8")
+            + "\n})();\n</script>")
 
 
 def add_loader(page):
