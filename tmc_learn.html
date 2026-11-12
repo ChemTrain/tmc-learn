@@ -467,7 +467,7 @@ sup.us { font-size: .7em; line-height: 0; vertical-align: .5em; }
         <div class="seg" role="group" aria-label="Counting method" data-opt="method"><button type="button" data-val="cov" title="Neutral ligands: L gives 2 electrons, X gives 1">Covalent</button><button type="button" data-val="ion" title="Ligands as closed-shell ions: Cl⁻ gives 2, Cp⁻ gives 6">Ionic</button></div>
       </div>
       <div class="field" data-for="learn">Answer with
-        <div class="seg" role="group" aria-label="Answer with" data-opt="ask"><button type="button" data-val="all" title="Electron count, oxidation state, dⁿ and geometry in turn">All</button><button type="button" data-val="ve">Electron count</button><button type="button" data-val="os">Ox. state</button><button type="button" data-val="dn">dⁿ</button><button type="button" data-val="geo" title="Guess the shape from the electron count">Geometry</button></div>
+        <div class="seg" role="group" aria-label="Answer with" data-opt="ask"><button type="button" data-val="all" title="Electron count, oxidation state, dⁿ and geometry in turn. Each button turns its own kind on or off">All</button><button type="button" data-val="ve">Electron count</button><button type="button" data-val="os">Ox. state</button><button type="button" data-val="dn">dⁿ</button><button type="button" data-val="geo" title="Guess the shape from the electron count">Geometry</button></div>
       </div>
       <div class="field" data-for="learn">Questions
         <div class="seg" role="group" aria-label="Questions" data-opt="qtype"><button type="button" data-val="mixed" title="Multiple choice until a card is familiar, then typed">Mixed</button><button type="button" data-val="mc">Choices</button><button type="button" data-val="written">Typed</button></div>
@@ -899,21 +899,25 @@ function geoOptions(ans) {
 // "All" takes them in turn, skipping a kind a card cannot be asked (no oxidation state, no simple shape).
 const ALL_Q = ['ve', 'os', 'dn', 'geo'];
 let qTurn = Math.random() * ALL_Q.length | 0, ligTurn = Math.random() * 2 | 0;
+// Answer with: any mix of the four. Each button turns its kind on or off and All turns them all on; the kinds that
+// are on are asked in turn. (Saved settings from before keep their single kind, or all of them.)
+if (!Array.isArray(settings.asks) || !settings.asks.some(q => ALL_Q.includes(q)))
+  settings.asks = settings.ask === 'all' || !ALL_Q.includes(settings.ask) ? [...ALL_Q] : [settings.ask];
+settings.asks = ALL_Q.filter(q => settings.asks.includes(q));
+const onlyAsk = q => settings.asks.length === 1 && settings.asks[0] === q;
+// a ligand is asked the electrons it gives when Electron count is on, its L/X class when any other kind is on
+const qOn = q => q === 'le' ? settings.asks.includes('ve') : q === 'cls' ? settings.asks.some(a => a !== 've') : settings.asks.includes(q);
 function pickQ(c) {
-  const a = settings.ask;
-  if (c.kind === 'ligand') return a === 've' ? 'le' : a === 'all' ? ['le', 'cls'][ligTurn++ % 2] : 'cls';
+  if (c.kind === 'ligand') { const lq = ['le', 'cls'].filter(qOn); return lq[ligTurn++ % lq.length]; }
   if (c.kind === 'custom') return 've';
-  if (a === 'all') {
-    for (let k = 0; k < ALL_Q.length; k++) {
-      const q = ALL_Q[qTurn++ % ALL_Q.length];
-      if (q === 've' || (q === 'geo' ? !!c.shape : !c.noOs)) return q;
-    }
+  for (let k = 0; k < ALL_Q.length; k++) {
+    const q = ALL_Q[qTurn++ % ALL_Q.length];
+    if (settings.asks.includes(q) && (q === 've' || (q === 'geo' ? !!c.shape : !c.noOs))) return q;
   }
-  if (a === 'geo') return c.shape ? 'geo' : 've';
-  return c.noOs ? 've' : a;
+  return 've';  // none of the kinds on can be asked of this card (no oxidation state, no simple shape)
 }
 // Geometry rounds only deal complexes that have a simple shape to guess
-const askable = c => settings.ask !== 'geo' || c.kind === 'ligand' || (c.kind === 'complex' && !!c.shape);
+const askable = c => !onlyAsk('geo') || c.kind === 'ligand' || (c.kind === 'complex' && !!c.shape);
 const ligE = lg => settings.method === 'ion' ? lg.ion : lg.cov;
 const answerOf = (c, q) => q === 've' ? c.ve : q === 'os' ? c.os : q === 'dn' ? c.dn : q === 'geo' ? c.shape : q === 'le' ? ligE(c.lg) : c.lg.cls;
 const optText = (q, v) => q === 'os' ? signed(v) : q === 'dn' ? dTxt(v) : q === 'cls' ? clsTxt(v) : q === 'geo' ? SHAPES[v] : num(v);
@@ -1207,12 +1211,24 @@ const OPT_VALUE = { qtype: v => v, ask: v => v, method: v => v, shuffle: v => v 
 function syncOptions() {
   for (const g of document.querySelectorAll('.optbar [data-opt]'))
     for (const b of g.querySelectorAll('button')) b.setAttribute('aria-pressed', String(String(settings[g.dataset.opt]) === b.dataset.val));
+  for (const b of document.querySelectorAll('.optbar [data-opt="ask"] button'))
+    b.setAttribute('aria-pressed', String(b.dataset.val === 'all' ? ALL_Q.every(q => settings.asks.includes(q)) : settings.asks.includes(b.dataset.val)));
 }
 // keepQ: ask the same thing again (a change of question type or method), with the choices already dealt
 function refreshQuestion(keepQ) { if (phase === 'question' && cur && !cur.answered) buildQuestion(cur.card, cur.memo, keepQ ? cur.q : null); }
 document.querySelector('.optbar').addEventListener('click', e => {
   const b = e.target.closest('[data-opt] button');
   if (!b) return;
+  if (b.closest('[data-opt]').dataset.opt === 'ask') {
+    const v = b.dataset.val, now = settings.asks;
+    const next = ALL_Q.filter(q => v === 'all' ? true : q === v ? !now.includes(q) : now.includes(q));
+    if (!next.length || next.join() === now.join()) return;  // the last kind on stays on
+    const geoOnly = onlyAsk('geo');
+    settings.asks = next; saveSettings(); syncOptions();
+    if (geoOnly !== onlyAsk('geo') || phase === 'nogeo') startRound();  // Geometry alone deals other cards
+    else if (phase === 'question' && cur && !cur.answered && !qOn(cur.q)) refreshQuestion(false);  // its kind is now off
+    return;
+  }
   const key = b.closest('[data-opt]').dataset.opt, val = OPT_VALUE[key](b.dataset.val);
   if (settings[key] === val) return;
   settings[key] = val; saveSettings(); syncOptions();
