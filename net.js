@@ -81,8 +81,21 @@
     const pend = json('ct.score.pending') || {}; pend[day] = { score, total }; save('ct.score.pending', pend);
     return account() ? flushScores() : null;
   }
+  // a Daily played before there was a pseudo, or seen from another page: today's and yesterday's scores from the Daily's records
+  function queueFromHistory() {
+    const hist = json('ctd.history') || {}, pend = json('ct.score.pending') || {};
+    let added = false;
+    for (const [day, score] of Object.entries(hist)) {
+      if (pend[day] || json('ct.score.' + day) || typeof score !== 'number') continue;
+      if (Math.abs(Date.parse(day + 'T12:00:00Z') - Date.now()) > 36 * 3600e3) continue;
+      const rec = json('ctd.daily.' + day), total = rec && Array.isArray(rec.q) && rec.q.length ? rec.q.length : 15;
+      pend[day] = { score, total }; added = true;
+    }
+    if (added) save('ct.score.pending', pend);
+  }
   async function flushScores() {
     if (!account()) return null;
+    queueFromHistory();
     const pend = json('ct.score.pending') || {}; let last = null;
     for (const day of Object.keys(pend)) {
       try { last = await authed('/score', { day, ...pend[day] }); delete pend[day]; save('ct.score.' + day, last); }
@@ -106,5 +119,5 @@
   setInterval(() => { if (account() && !document.hidden && dirty()) sync(); }, 60000);
 
   window.CT = { API, api, authed, account, join, login, logout, rename, remove, sync, submitScore, flushScores, scoreOf, KIND, hash };
-  if (account()) { sync(); if (Object.keys(json('ct.score.pending') || {}).length) flushScores(); }
+  if (account()) { sync(); flushScores(); }
 })();
