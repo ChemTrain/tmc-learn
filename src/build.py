@@ -104,10 +104,16 @@ def loader_html():
     )
 
 
+def net_html():
+    """The account and its progress across devices (net.js), with the merge rules it shares with the server."""
+    rules = (HERE.parent / "sync_rules.js").read_text(encoding="utf-8").replace("export { KIND, mergeDocs };", "")
+    return "<script>\n" + rules + "\n" + (HERE.parent / "net.js").read_text(encoding="utf-8") + "</script>"
+
+
 def add_loader(page):
     if MARK not in page:
         sys.exit(f"template needs a {MARK} mark (right after its <style>)")
-    return page.replace(MARK, loader_html(), 1)
+    return page.replace(MARK, loader_html() + "\n" + net_html(), 1)
 
 
 def favicon():
