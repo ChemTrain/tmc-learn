@@ -1531,9 +1531,10 @@ const LETTERS = 'ABCDEFGH';
 const ct = { deck: [], i: 0, cur: null, results: [], phase: 'question', retry: false };
 // mononuclear complexes; in the ionic count, not the ones whose oxidation state is a matter of convention
 const ctPool = () => notMastered(active.cards).filter(c => c.kind === 'complex' && c.n === 1 && !(settings.method === 'ion' && c.noOs));
+// no rounds: one complex after another, picked by shared/learn_pick.js; Count keeps no record, so it never runs out
+const ctQuiz = () => ({ pool: ctPool(), key: c => c.id, rec: {}, ask: 'all', all: CTLearn.isAll(active) });
 function ctDeal() {
-  ct.deck = shuffle(ctPool()); ct.i = 0; ct.results = []; ct.retry = false;
-  if (ct.deck.length) ctBuild(); else { ct.phase = 'empty'; renderCount(); }
+  if (CTLearn.deal(ct, ctQuiz(), ct.cur && ct.cur.c)) ctBuild(); else { ct.phase = 'empty'; renderCount(); }
 }
 // a round of just the questions missed in the round before
 function retryDeck(st, build) {
@@ -1582,7 +1583,7 @@ function ctBuild() {
 function ctRelevel() {
   if (ct.phase === 'question' && ct.cur && ct.cur.checked) return ctNext();
   if (ct.phase !== 'question' || !ct.cur) return ctRefresh();
-  if (ct.deck.length - ct.i > 1) { ct.deck.splice(ct.i, 1); return ctBuild(); }
+  if (CTLearn.swap(ct, ctQuiz())) return ctBuild();
   ctRefresh();
 }
 // a change of method re-asks the current complex; answers typed so far are kept where they still fit
@@ -1609,10 +1610,7 @@ function ctCheck() {
   const b = $('#ct-next'); if (b) b.focus({ preventScroll: true });
 }
 function ctNext() {
-  ct.i++;
-  if (ct.i < ct.deck.length) return ctBuild();
-  ct.phase = 'summary'; renderCount();
-  const b = $('#ct-retry') || $('#ct-again'); if (b) b.focus({ preventScroll: true });
+  if (CTLearn.step(ct, ctQuiz())) ctBuild(); else { ct.phase = 'empty'; renderCount(); }
 }
 // the structure with a letter badge on each ligand's bond to the metal
 function countSVG(cc, maxScale, maxH, maxW) {
@@ -1663,10 +1661,10 @@ function renderCount() {
   const fb = cc.checked ? `<div class="feedback" aria-live="polite">
       <p class="verdict ${cc.ok ? 'good' : 'bad'}">${cc.ok ? 'All correct' : `${cc.rows.filter(r => cc.marks[r.id]).length} of ${cc.rows.length} right`}</p>
       ${tallyHTML(c)}${c.note && !c.noOs ? `<p class="note">${esc(c.note)}</p>` : ''}
-      <div class="row end"><button type="button" class="btn" id="ct-next">${ct.i + 1 < ct.deck.length ? 'Next complex' : 'See results'}</button></div></div>`
+      <div class="row end"><button type="button" class="btn" id="ct-next">Next complex</button></div></div>`
     : `<div class="row end"><span class="help">Enter moves to the next box.</span><button type="button" class="btn" id="ct-check">Check</button></div>`;
   el.innerHTML = `<div class="panel">
-      <div class="qhead"><div class="qtop"><p class="eyebrow">Count it${ct.retry ? ' · missed' : ''} · ${ct.i + 1} of ${ct.deck.length}</p><div class="tags">${c.charge ? `<span class="pill ion">${c.charge > 0 ? 'cation' : 'anion'}</span>` : ''}${star(c)}</div></div>
+      <div class="qhead"><div class="qtop"><p class="eyebrow">Count it</p><div class="tags">${c.charge ? `<span class="pill ion">${c.charge > 0 ? 'cation' : 'anion'}</span>` : ''}${star(c)}</div></div>
         <div class="qmain" draggable="true" data-drag="${refKey(c)}"><div class="qtext"><h2 class="term">${esc(c.term)}</h2><p class="formula">${esc(c.formula)}</p></div>${struct}</div>
         <p class="ask">${ask}</p></div>
       <div class="cgrid">${cc.rows.map(r => ctRow(cc, r)).join('')}</div>${fb}
@@ -1699,25 +1697,24 @@ const NAME_LISTS = [{ id: 'all', name: 'All named complexes', cards: NAMED },
   ...[...new Set(NAMED.map(c => c.fam))].map(f => ({ id: f, name: cap(f), cards: NAMED.filter(c => c.fam === f) }))];
 const NM_DIRS = { struct: 'Structure → name', name: 'Name → structure' };
 const nm = { list: null, dir: store.get('tmc1.name.dir') === 'name' ? 'name' : 'struct', deck: [], i: 0, cur: null, phase: 'question', results: [], streak: 0, retry: false };
-const nmSeen = store.get('tmc1.named') || {};  // term -> 1 if last answer right, else 0
+const nmSeen = store.get('tmc1.named') || {};  // term -> right answers so far (3 = done; a miss takes one back)
 
 function nmSelect(id) {
   nm.list = NAME_LISTS.find(l => l.id === id) || NAME_LISTS[0];
   store.set('tmc1.name.list', nm.list.id);
   nmDeal(); renderNmSide();
 }
+// no rounds: one complex after another, picked by shared/learn_pick.js (Not mastered: until each is named right three times)
+const nmQuiz = () => ({ pool: nm.list.cards, key: c => c.term, rec: nmSeen, ask: settings.only === 'todo' ? 'new' : 'all', all: nm.list.id === 'all' });
 function nmDeal() {
   if (!nm.list) return;
-  // Not mastered: leave out the complexes named right last time
-  nm.deck = shuffle(settings.only === 'todo' ? nm.list.cards.filter(c => nmSeen[c.term] !== 1) : nm.list.cards); nm.i = 0; nm.results = []; nm.retry = false;
-  if (nm.deck.length) nmBuild(); else { nm.phase = 'empty'; renderName(); }
+  if (CTLearn.deal(nm, nmQuiz(), nm.cur && nm.cur.c)) nmBuild(); else { nm.phase = 'empty'; renderName(); }
 }
 // a new level deals another complex in place of an unanswered one; an answered one gives way to the next
 function nmRelevel() {
   if (nm.phase !== 'question' || !nm.cur) return;
   if (nm.cur.chosen !== null) return nmNext();
-  if (nm.deck.length - nm.i > 1) nm.deck.splice(nm.i, 1);
-  nmBuild();
+  if (CTLearn.swap(nm, nmQuiz())) nmBuild(); else { nm.phase = 'empty'; renderName(); }
 }
 function nmOptions(c) {
   const others = NAMED.filter(o => o.term !== c.term && o.mol !== c.mol);
@@ -1737,7 +1734,7 @@ function nmChoose(i) {
   cc.chosen = i; cc.ok = cc.options[i] === cc.c;
   nm.streak = cc.ok ? nm.streak + 1 : 0;
   nm.results.push({ c: cc.c, ok: cc.ok });
-  nmSeen[cc.c.term] = cc.ok ? 1 : 0; store.set('tmc1.named', nmSeen);
+  CTLearn.mark(nmSeen, cc.c.term, cc.ok); store.set('tmc1.named', nmSeen);
   // a right name earns a bonus question: the complex's electron count
   if (cc.ok) cc.bonus = { options: numericOptions('ve', cc.c.ve), chosen: null };
   renderName(); renderNmSide();
@@ -1751,10 +1748,7 @@ function nmBonus(i) {
   const n = $('#nm-next'); if (n) n.focus({ preventScroll: true });
 }
 function nmNext() {
-  nm.i++;
-  if (nm.i < nm.deck.length) return nmBuild();
-  nm.phase = 'summary'; renderName();
-  const b = $('#nm-retry') || $('#nm-again'); if (b) b.focus({ preventScroll: true });
+  if (CTLearn.step(nm, nmQuiz())) nmBuild(); else { nm.phase = 'empty'; renderName(); }
 }
 const nmDirRow = () => `<div class="seg-row"><span class="lab" id="nm-dir-lab">Show</span>
     <div class="seg" role="group" aria-labelledby="nm-dir-lab">${Object.entries(NM_DIRS).map(([k, t]) =>
@@ -1762,7 +1756,7 @@ const nmDirRow = () => `<div class="seg-row"><span class="lab" id="nm-dir-lab">S
 function renderName() {
   const el = $('#name-box');
   if (nm.phase === 'empty') {
-    el.innerHTML = `<div class="panel">${nmDirRow()}<p class="help">${settings.only === 'todo' && nm.list.cards.length ? 'You named every complex in this list right last time. Choose All cards to go through them again.' : 'No complexes in this list.'}</p></div>`;
+    el.innerHTML = `<div class="panel">${nmDirRow()}<p class="help">${settings.only === 'todo' && nm.list.cards.length ? 'You named every complex in this list right three times. Choose All cards to go through them again.' : 'No complexes in this list.'}</p></div>`;
     return;
   }
   if (nm.phase === 'summary') {
@@ -1805,18 +1799,18 @@ function renderName() {
         <p class="verdict ${cc.ok ? 'good' : 'bad'}">${cc.ok ? 'Correct' : 'Not quite'}</p>
         <p class="fbline">This is <strong>${esc(c.term)}</strong>, ${esc(c.formula)}${cc.ok ? '' : `: ${num(c.ve)} electrons`}.</p>
         ${c.note ? `<p class="note">${esc(c.note)}</p>` : ''}${bonus}
-        <div class="row end"><button type="button" class="btn${ready ? '' : ' ghost'}" id="nm-next">${nm.i + 1 < nm.deck.length ? (ready ? 'Next complex' : 'Skip the bonus') : 'See results'}</button></div></div>`;
+        <div class="row end"><button type="button" class="btn${ready ? '' : ' ghost'}" id="nm-next">${ready ? 'Next complex' : 'Skip the bonus'}</button></div></div>`;
   }
   el.innerHTML = `<div class="panel">${nmDirRow()}
-      <div class="qhead"><div class="qtop"><p class="eyebrow">Name it${nm.retry ? ' · missed' : ''} · ${nm.i + 1} of ${nm.deck.length}</p><div class="tags">${tags}</div></div>${head}</div>
+      <div class="qhead"><div class="qtop"><p class="eyebrow">Name it</p><div class="tags">${tags}<span class="pill" data-l="${Math.min(3, +nmSeen[c.term] || 0)}">${LEVEL_NAMES[Math.min(3, +nmSeen[c.term] || 0)]}</span></div></div>${head}</div>
       <div class="options">${opts}</div>${fb}</div>`;
 }
 function renderNmSide() {
   $('#nm-lists').innerHTML = NAME_LISTS.map(l => {
-    const n = l.cards.length, right = l.cards.filter(c => nmSeen[c.term] === 1).length, tried = l.cards.some(c => c.term in nmSeen);
+    const n = l.cards.length, right = l.cards.filter(c => CTLearn.done(nmSeen, c.term)).length, tried = l.cards.some(c => c.term in nmSeen);
     return `<button type="button" class="set" data-list="${esc(l.id)}" aria-pressed="${l === nm.list}">
         <span class="nm">${esc(l.name)}</span>
-        <span class="meta"><span>${n} complex${n === 1 ? '' : 'es'}</span><span>${tried ? `${right} right` : 'not tried'}</span></span>
+        <span class="meta"><span>${n} complex${n === 1 ? '' : 'es'}</span><span>${tried ? `${right} mastered` : 'not tried'}</span></span>
         <span class="mini"><i style="width:${n ? right / n * 100 : 0}%"></i></span>
       </button>`;
   }).join('');
