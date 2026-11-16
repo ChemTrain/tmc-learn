@@ -443,7 +443,7 @@ sup.us { font-size: .7em; line-height: 0; vertical-align: .5em; }
 // What to do with a key: skip it, keep the newer value (lww), keep the higher number per entry (max), keep every
 // entry (union), or keep the play with more answers (progress).
 function KIND(k) {
-  if (!/^(pka2|rxn|pg|tmc1|rl|rad|pr|ctd)\./.test(k)) return 'skip';                    // not an app's record
+  if (!/^(pka2|rxn|pg|tmc1|rl|rad|pr|ctd|aa)\./.test(k)) return 'skip';                    // not an app's record
   if (/\.round\.|\.pt$|^ctd\.past\.|^ctd\.set$/.test(k)) return 'skip';                 // a round or set under way, an open panel
   if (/^ctd\.daily\./.test(k)) return 'progress';                                        // a Daily quiz: its questions and answers
   if (/\.levels(\.|$)|\.seen$|^(ctd\.history|ctd\.late|ctd\.beast|pg\.plan|pg\.removed|rxn\.which|pka2\.acidic|tmc1\.named)$/.test(k)) return 'max';
