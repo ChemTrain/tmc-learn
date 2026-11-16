@@ -79,6 +79,7 @@ def loader_html():
         '<div id="ct-loading" aria-hidden="true"><div class="ct-ld">'
         f'<img src="data:image/svg+xml;base64,{svg}" alt="" width="96" height="132"><span>Loading</span></div></div>\n'
         "<style>\n"
+        "html, body { overflow-x: clip; overscroll-behavior-x: none; }  /* a finger moving sideways never pans the page */\n"
         "#ct-loading { position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center;"
         " background: var(--bg, #EDF1F4); transition: opacity .3s ease, visibility 0s linear .3s; }\n"
         "#ct-loading .ct-ld { display: grid; justify-items: center; gap: 12px; animation: ct-ld-in .35s ease .3s both; }\n"
