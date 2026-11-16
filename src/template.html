@@ -543,7 +543,6 @@ sup.us { font-size: .7em; line-height: 0; vertical-align: .5em; }
 <script>
 const DATA = window.TMC_DATA || { sets: [], mols: [], ligands: {} };
 const MOLS = DATA.mols, LIG = DATA.ligands;
-const ROUND_SIZE = 7;
 const LEVEL_NAMES = ['Not studied', 'Learning', 'Familiar', 'Mastered'];
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -823,16 +822,15 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-leve
 function startRound() {
   if (!active.cards.length) { phase = 'empty'; round = null; cur = null; renderLearn(); return; }
   if (!active.cards.some(askable)) { phase = 'nogeo'; round = null; cur = null; renderLearn(); return; }
-  let pending = order.filter(c => lvl(c.id) < 3 && askable(c));
-  if (settings.only === 'all') {  // every card once per pass, mastered ones too
-    pending = order.filter(c => !passSeen.has(c.id) && askable(c));
-    if (!pending.length) { makeOrder(); pending = order.filter(askable); }
-  }
-  if (!pending.length) { phase = 'done'; round = null; renderLearn(); return; }
-  const pick = pending.slice(0, ROUND_SIZE);
-  for (const c of pick) passSeen.add(c.id);
-  round = { queue: settings.shuffle ? shuffle(pick) : pick, i: 0, results: [] };
-  buildQuestion(round.queue[0]);
+  round = { queue: [], i: 0, results: [], seen: new Map() };
+  nextQuestion();
+}
+// One question after another, no rounds: shared/learn_pick.js picks the card (null: everything mastered).
+function nextQuestion(not) {
+  const c = CTLearn.next({ cards: active.cards.filter(askable), order, lvl, ask: settings.only, shuffle: settings.shuffle, all: CTLearn.isAll(active), round, not });
+  if (!c) { phase = 'done'; renderLearn(); return; }
+  round.queue[round.i] = c;
+  buildQuestion(c);
 }
 
 /* ---------- geometry ---------- */
@@ -933,17 +931,11 @@ function buildQuestion(card, memo = {}, keepQ = null) {
   phase = 'question';
   renderLearn();
 }
-// on a new level: swap the card on screen for one not yet in this round, or else the next one in the round;
-// a card swapped out stays out of the round, so switching back can't bring its choices up again
+// on a new level: swap the card on screen for another, so switching back can't bring its choices up again
 function relevelQuestion() {
   if (phase !== 'question' || !cur) return;
   if (cur.answered) return advance();  // a new difficulty applies from the next question on, at once
-  const out = round.out || (round.out = new Set());
-  out.add(cur.card);
-  const spare = order.find(c => lvl(c.id) < 3 && askable(c) && !round.queue.includes(c) && !out.has(c));
-  if (spare) round.queue[round.i] = spare;
-  else if (round.queue.length - round.i > 1) round.queue.splice(round.i, 1);
-  buildQuestion(round.queue[round.i]);
+  nextQuestion(cur.card);  // another card, asked on the new level
 }
 
 function grade(text) {
@@ -955,7 +947,7 @@ function grade(text) {
 function focusContinue() { const b = $('#continue'); if (b) b.focus({ preventScroll: true }); }
 function resolve(ok, info) {
   const c = cur.card, before = lvl(c.id);
-  const after = ok ? (before >= 2 ? 3 : 2) : 1;
+  const after = CTLearn.after(before, ok);
   levels[c.id] = after; saveLevels();
   cur.answered = true;
   cur.result = Object.assign({ card: c, ok, before, after }, info);
@@ -979,15 +971,13 @@ function submitWritten(dontKnow) {
 function override() {
   const r = cur && cur.result;
   if (!r || r.ok) return;
-  r.ok = true; r.overridden = true; r.after = r.before >= 2 ? 3 : 2;
+  r.ok = true; r.overridden = true; r.after = CTLearn.after(r.before, true);
   levels[r.card.id] = r.after; saveLevels();
   renderLearn(); focusContinue();
 }
 function advance() {
   round.i++;
-  if (round.i < round.queue.length) return buildQuestion(round.queue[round.i]);
-  phase = 'summary'; renderLearn();
-  const b = $('#next-round'); if (b) b.focus({ preventScroll: true });
+  nextQuestion();
 }
 
 // the electron-count bar: 8 to 22 electrons, with 16 and 18 marked
@@ -1142,7 +1132,7 @@ function doneHTML() {
   return `<div class="panel">
       <div class="qhead"><p class="eyebrow">Set complete</p>
       <h2 class="term">All ${active.cards.length} cards mastered</h2>
-      <p class="ask">It took ${plural(roundNo, 'round')}. Study again to reset this set and start over, or pick another set.</p></div>
+      <p class="ask">Study again to reset this set and start over, or pick another set.</p></div>
       <div class="row end"><button type="button" class="btn" id="study-again">Study again</button></div>
     </div>`;
 }
@@ -1346,7 +1336,7 @@ $('#set-save').addEventListener('click', () => {
   const text = $('#set-editor').value;
   if (text.trim() && !parseCustom(text).length) return msg('No cards found. Put one card per line, like: Ferrocene | Cp₂Fe | 18', false);
   saveCustom(text);
-  msg(`Saved ${plural(CUSTOM.cards.length, 'card')}. Learn starts a fresh round.`, true);
+  msg(`Saved ${plural(CUSTOM.cards.length, 'card')}. Learn now asks from them.`, true);
 });
 const copyBtn = $('#copy-set');
 copyBtn.addEventListener('click', () => {
